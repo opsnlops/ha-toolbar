@@ -18,7 +18,6 @@ struct EntitiesSettings: View {
                     TextField("Rain Amount", text: $rainAmountEntity)
                 }
 
-
             }
             Spacer()
         }

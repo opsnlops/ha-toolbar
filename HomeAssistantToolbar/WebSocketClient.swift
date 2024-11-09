@@ -193,7 +193,7 @@ class WebSocketClient {
             if let subscriptionString = String(data: subscriptionData, encoding: .utf8) {
                 logger.debug("Subscription message being sent: \(subscriptionString)")
                 try await webSocketTask.send(.string(subscriptionString))
-                logger.info("Subscribed to state changes.")
+                logger.info("Subscribed to state changes")
             }
         } catch {
             logger.error("Failed to send subscription message: \(error.localizedDescription)")
@@ -248,7 +248,8 @@ class WebSocketClient {
                 }
 
             default:
-                logger.trace("Unhandled entity: \(entityId)")
+                return
+                //logger.trace("Unhandled entity: \(entityId)")
         }
     }
 

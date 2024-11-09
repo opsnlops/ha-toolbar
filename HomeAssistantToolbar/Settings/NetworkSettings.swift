@@ -40,7 +40,7 @@ struct NetworkSettings: View {
                 }
 
                 Section(header: Text("Authentication")) {
-                    TextField("Auth Token", text: $authToken)
+                    SecureField("Auth Token", text: $authToken)
                         .onChange(of: authToken) {
                             saveAuthToken()
                         }

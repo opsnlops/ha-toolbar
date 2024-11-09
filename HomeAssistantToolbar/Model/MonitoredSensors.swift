@@ -24,17 +24,26 @@ public class MonitoredSensors: ObservableObject {
 
     @MainActor
     func updateOutsideTemperature(_ temperature: Double) {
-        self.outsideTemperature = temperature
+
+        // Only send a notification if things have actually changed
+        if temperature != self.outsideTemperature {
+            self.outsideTemperature = temperature
+        }
     }
 
     @MainActor
     func updateWindSpeed(_ windSpeed: Double) {
-        self.windSpeed = windSpeed
+        if windSpeed != self.windSpeed {
+            self.windSpeed = windSpeed
+        }
+
     }
 
     @MainActor
     func updateRainAmount(_ rainAmount: Double) {
-        self.rainAmount = rainAmount
+        if rainAmount != self.rainAmount {
+            self.rainAmount = rainAmount
+        }
     }
 
 }
