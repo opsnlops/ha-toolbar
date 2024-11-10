@@ -5,15 +5,11 @@ import SwiftUI
 
 struct EntitiesView: View {
 
-    var client: WebSocketClient?
-
-    @State var serverHostname: String = ""
-    @State var authToken: String = ""
+    let client = WebSocketClient.shared
 
     @ObservedObject var sensors = MonitoredSensors.shared
 
     let logger = Logger(subsystem: "io.opsnlops.HomeAssistantToolbar", category: "ContentView")
-
 
     var body: some View {
 
@@ -27,14 +23,13 @@ struct EntitiesView: View {
             Text("Total events: \(sensors.totalEventsProcessed)")
             Text("Temperature: \(sensors.outsideTemperature, specifier: "%.1f")°F")
             Text("Rain Amount: \(sensors.rainAmount, specifier: "%.2f")mm")
-            Text("Wind Speed: \(sensors.windSpeed, specifier: "%.1f") MPH")
+            Text("Wind Speed: \(sensors.windSpeed, specifier: "%.0f") MPH")
         }
         .padding()
     }
 
     func connect() {
-        let client = WebSocketClient(hostname: serverHostname, authToken: authToken)
-        client.connect()
+        _ = client.connect()
     }
 
 }

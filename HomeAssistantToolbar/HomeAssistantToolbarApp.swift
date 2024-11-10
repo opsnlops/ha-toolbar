@@ -36,6 +36,8 @@ struct HomeAssistantToolbarApp: App {
 
     let simpleKeychain = SimpleKeychain(service: "io.opsnlops.HomeAssistantToolbar", synchronizable: true)
 
+    let client = WebSocketClient.shared
+
     @ObservedObject var sensors = MonitoredSensors.shared
     @State private var isSettingsWindowOpen = false
 
@@ -63,7 +65,10 @@ struct HomeAssistantToolbarApp: App {
 
         if let extHostname = try? simpleKeychain.string(forKey: "externalHostname") {
             _serverHostname = State(initialValue: extHostname)
+            logger.debug("setting external hostname to \(extHostname)")
         }
+
+    client.configure(hostname: serverHostname, authToken: authToken)
 
     #if os(macOS)
         // Connect if we can
@@ -72,8 +77,14 @@ struct HomeAssistantToolbarApp: App {
     }
 
     func connect() {
-        let client = WebSocketClient(hostname: serverHostname, authToken: authToken)
-        client.connect()
+
+        let connectResult = client.connect()
+        switch (connectResult) {
+            case .success:
+                logger.debug("Connected to \(serverHostname)")
+            case .failure(let error):
+                logger.fault("Failed to connect to \(serverHostname): \(error)")
+        }
     }
 
 
@@ -93,8 +104,8 @@ struct HomeAssistantToolbarApp: App {
             // Drop down menu when clicked
             VStack {
                 Text("🌡️ Outside Temperature: \(sensors.outsideTemperature, specifier: "%.1f")°F")
-                Text("💨 Wind Speed: \(sensors.windSpeed, specifier: "%.1f") mph")
-                Text("🌧️ Rain Amount: \(sensors.rainAmount, specifier: "%.1f") mm")
+                Text("💨 Wind Speed: \(sensors.windSpeed, specifier: "%.0f") mph")
+                Text("🌧️ Rain Amount: \(sensors.rainAmount, specifier: "%.2f") mm")
                 Divider()
 
 

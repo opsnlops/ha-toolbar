@@ -2,7 +2,15 @@ import Foundation
 import OSLog
 import SwiftUI
 
+struct EntityState: Decodable {
+    let state: String
+}
+
+
 class WebSocketClient {
+
+    static let shared = WebSocketClient()
+
     private var webSocketTask: URLSessionWebSocketTask?
 
     let logger = Logger(subsystem: "io.opsnlops.HomeAssistantToolbar", category: "WebSocketClient")
@@ -14,17 +22,13 @@ class WebSocketClient {
     @AppStorage("windSpeedEntity") private var windSpeedEntity: String = ""
     @AppStorage("rainAmountEntity") private var rainAmountEntity: String = ""
 
-    private var serverHostname: String = ""
+    private var serverHostname: String?
     private var authToken: String?
 
     let sensorData = MonitoredSensors.shared
 
-    init(hostname: String, authToken: String?) {
-        self.serverHostname = hostname
-        self.authToken = authToken
-    }
 
-    func makeURL() -> URL {
+    func makeWebsocketURL() -> URL {
         var components = URLComponents()
         components.host = serverHostname
         components.port = serverPort
@@ -33,21 +37,76 @@ class WebSocketClient {
         return components.url!
     }
 
-    func connect() {
-        logger.info("Connecting to \(self.serverHostname)")
-        let url = makeURL()
-        webSocketTask = URLSession.shared.webSocketTask(with: url)
-        webSocketTask?.resume()
+    func makeReadStateURL() -> URL {
+        var components = URLComponents()
+        components.host = serverHostname
+        components.port = serverPort
+        components.scheme = serverUseTLS ? "https" : "http"
+        components.path.append("/api/states/")
+        return components.url!
+    }
 
-        // Start receiving messages
-        Task {
-            await authenticate()
-            await listenForMessages()
+
+    func configure(hostname: String, authToken: String) {
+        self.serverHostname = hostname
+        self.authToken = authToken
+    }
+
+    func connect() -> Result<String, ServerError> {
+
+        guard serverHostname != nil && authToken != nil else {
+            logger.error("Invalid configuration: hostname: \(self.serverHostname ?? "") and authToken: \(self.authToken ?? "")")
+            return .failure(.invalidConfiguration)
         }
+
+        if let serverHostname {
+            logger.info("Using hostname: \(serverHostname)")
+            let url = makeWebsocketURL()
+            webSocketTask = URLSession.shared.webSocketTask(with: url)
+            webSocketTask?.resume()
+
+            // Start receiving messages
+            Task {
+                await authenticate()
+                await listenForMessages()
+            }
+
+            return .success("Connected to \(serverHostname)")
+        }
+        else {
+            return .failure(.invalidConfiguration)
+        }
+
+
     }
 
     func disconnect() {
         webSocketTask?.cancel(with: .goingAway, reason: nil)
+    }
+
+
+    func readSensorState(_ entity: String) async -> Result<String, ServerError> {
+
+        let baseUrl = makeReadStateURL()
+        let url = baseUrl.appendingPathComponent(entity)
+
+        var request = URLRequest(url: url)
+
+        request.httpMethod = "GET"
+        request.addValue("Bearer \(authToken ?? "uh-oh")", forHTTPHeaderField: "Authorization")
+
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let entityData = try JSONDecoder().decode(EntityState.self, from: data)
+
+            logger.debug("Read sensor state: \(entityData.state)")
+            return .success(entityData.state)
+        }
+        catch {
+            logger.warning("Failed to read sensor state: \(error)")
+            return .failure(.networkError(error.localizedDescription))
+        }
+
     }
 
     func sendMessage(_ message: String) async {
@@ -127,7 +186,7 @@ class WebSocketClient {
     private func reconnect() async {
         try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
         logger.info("Attempting to reconnect...")
-        connect()
+        _ = connect()
     }
 
 
@@ -160,6 +219,7 @@ class WebSocketClient {
                 logger.info("Authenticated successfully with Home Assistant.")
                 // Now that we're authenticated, subscribe to the sensor
                 Task {
+                    await readIntialState()
                     await subscribeToSensorState()
                 }
 
@@ -198,6 +258,43 @@ class WebSocketClient {
         } catch {
             logger.error("Failed to send subscription message: \(error.localizedDescription)")
         }
+    }
+
+    private func readIntialState() async {
+
+        // Now that we know we're authed, use the REST API to get the current state
+        // of the sensors
+
+        let temperatureResponse = await readSensorState(outsideTemperatureEntity)
+        switch (temperatureResponse) {
+            case .success(let temperature):
+                DispatchQueue.main.async {
+                    self.sensorData.updateOutsideTemperature(Double(temperature)!)
+                }
+            case .failure(let error):
+                logger.error("Failed to read temperature initial state: \(error.localizedDescription)")
+        }
+
+        let rainAmountResponse = await readSensorState(rainAmountEntity)
+        switch (rainAmountResponse) {
+            case .success(let rainAmount):
+                DispatchQueue.main.async {
+                    self.sensorData.updateRainAmount(Double(rainAmount)!)
+                }
+            case .failure(let error):
+                logger.error("Failed to read rain initial state: \(error.localizedDescription)")
+        }
+
+        let windSpeedResponse = await readSensorState(windSpeedEntity)
+        switch (windSpeedResponse) {
+            case .success(let windSpeed):
+                DispatchQueue.main.async {
+                    self.sensorData.updateWindSpeed(Double(windSpeed)!)
+                }
+            case .failure(let error):
+                logger.error("Failed to read wind speed initial state: \(error.localizedDescription)")
+        }
+
     }
 
 
