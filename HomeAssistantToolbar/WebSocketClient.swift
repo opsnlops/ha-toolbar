@@ -27,6 +27,9 @@ class WebSocketClient {
 
     let sensorData = MonitoredSensors.shared
 
+    private var pingTimer: Timer?
+    private var isWaitingForPong = false
+    private var pingId: Int = Int.random(in: 100...10000)
 
     func makeWebsocketURL() -> URL {
         var components = URLComponents()
@@ -68,6 +71,7 @@ class WebSocketClient {
             // Start receiving messages
             Task {
                 await authenticate()
+                startPingTimer()
                 await listenForMessages()
             }
 
@@ -184,6 +188,7 @@ class WebSocketClient {
 
 
     private func reconnect() async {
+        stopPingTimer()
         try? await Task.sleep(nanoseconds: 5 * 1_000_000_000)
         logger.info("Attempting to reconnect...")
         _ = connect()
@@ -232,6 +237,9 @@ class WebSocketClient {
 
             case "result":
                 handleResult(json)
+
+            case "pong":
+                handlePong(json)
 
             default:
                 logger.warning("Unhandled message type: \(type)")
@@ -350,10 +358,93 @@ class WebSocketClient {
         }
     }
 
+    private func handlePong(_ json: [String: Any]) {
+        logger.debug("Handling pong: \(json, privacy: .private)")
+        isWaitingForPong = false
+        pingId += 1
+    }
 
     private func handleResult(_ json: [String: Any]) {
         // Process result messages from Home Assistant
         logger.debug("Handling result: \(json, privacy: .private)")
+    }
+
+
+    private func sendPing() async {
+
+        // If we're still waiting for a pong, reconnect
+        guard !isWaitingForPong else {
+            logger.error("Ping timeout, marking WebSocket as disconnected")
+            await reconnect()
+            return
+        }
+
+        guard let webSocketTask = webSocketTask else { return }
+
+        // Prepare the ping
+        let pingMessage = [
+            "type": "ping",
+            "id": pingId
+        ] as [String : Any]
+
+        do {
+            // Convert to JSON string
+            let pingData = try JSONSerialization.data(withJSONObject: pingMessage)
+            if let pingString = String(data: pingData, encoding: .utf8) {
+
+                isWaitingForPong = true
+
+                logger.debug("Ping message being sent: \(pingString, privacy: .private)")
+                try await webSocketTask.send(.string(pingString))
+                logger.debug("Sent ping")
+            }
+        } catch {
+            logger.error("Failed to send ping: \(error.localizedDescription)")
+            await reconnect()
+
+        }
+    }
+
+
+    private func startPingTimer() {
+
+        // Stop the timer if it's running
+        stopPingTimer()
+
+        logger.debug("Starting ping timer")
+
+        DispatchQueue.main.async {
+            self.pingTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
+                Task {
+                    self.logger.debug("Ping timer fired")
+                    await self.sendPing()
+                }
+            }
+            RunLoop.main.add(self.pingTimer!, forMode: .common)
+            self.logger.debug("Ping timer setup complete")
+        }
+
+    }
+
+    private func stopPingTimer() {
+
+        logger.debug("stopping any ping timers")
+
+        self.isWaitingForPong = false
+        pingTimer?.invalidate()
+        pingTimer = nil
+    }
+
+    private func reconnect() {
+
+        // Stop the timer
+        stopPingTimer()
+
+        // Handle the socket
+        webSocketTask?.cancel(with: .goingAway, reason: nil)
+
+        // .. and reconnect
+        _ = connect()
     }
 }
 
