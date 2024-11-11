@@ -10,6 +10,7 @@ import SwiftUI
 @main
 struct HomeAssistantToolbarApp: App {
 
+    @Environment(\.scenePhase) var scenePhase
 
     #if os(macOS)
     class SettingsWindowController: NSWindowController {
@@ -93,6 +94,16 @@ struct HomeAssistantToolbarApp: App {
         #if os(iOS) || os(tvOS)
         WindowGroup {
             TopContentView()
+        }
+        .onChange(of: scenePhase, initial: false) { old, phase in
+            if (phase == .active && !authToken.isEmpty && !serverHostname.isEmpty) {
+                logger.debug("Scene is active, connecting to \(serverHostname)")
+                connect()
+            }
+            else if (phase == .background || phase == .inactive) {
+                logger.info("Scene is inactive, disconnecting from \(serverHostname)")
+                client.disconnect()
+            }
         }
         #endif
 

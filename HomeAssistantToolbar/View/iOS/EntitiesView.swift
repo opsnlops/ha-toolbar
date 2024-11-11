@@ -5,7 +5,7 @@ import SwiftUI
 
 struct EntitiesView: View {
 
-    let client = WebSocketClient.shared
+    @ObservedObject var client = WebSocketClient.shared
 
     @ObservedObject var sensors = MonitoredSensors.shared
 
@@ -16,14 +16,23 @@ struct EntitiesView: View {
 
         VStack {
 
-            Button("Connect") {
+            Button("Force Connection") {
                 connect()
             }
+            .padding(.bottom)
+            .buttonStyle(.borderedProminent)
 
-            Text("Total events: \(sensors.totalEventsProcessed)")
-            Text("Temperature: \(sensors.outsideTemperature, specifier: "%.1f")°F")
-            Text("Rain Amount: \(sensors.rainAmount, specifier: "%.2f")mm")
-            Text("Wind Speed: \(sensors.windSpeed, specifier: "%.0f") MPH")
+            Text("💻 Total events: \(sensors.totalEventsProcessed)")
+            Text("🌡️ Temperature: \(sensors.outsideTemperature, specifier: "%.1f")°F")
+            Text("🌧️ Rain Amount: \(sensors.rainAmount, specifier: "%.2f")mm")
+            Text("💨 Wind Speed: \(sensors.windSpeed, specifier: "%.0f") MPH")
+
+            Spacer()
+                .padding()
+
+            Text("Is connected? \(client.isConnected)")
+            Text("Total pings: \(client.totalPings)")
+
         }
         .padding()
     }

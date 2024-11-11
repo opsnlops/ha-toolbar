@@ -7,7 +7,7 @@ struct EntityState: Decodable {
 }
 
 
-class WebSocketClient {
+class WebSocketClient : ObservableObject {
 
     static let shared = WebSocketClient()
 
@@ -30,6 +30,9 @@ class WebSocketClient {
     private var pingTimer: Timer?
     private var isWaitingForPong = false
     private var pingId: Int = Int.random(in: 100...10000)
+
+    @Published var isConnected: Bool = false
+    @Published var totalPings: Int = 0
 
     func makeWebsocketURL() -> URL {
         var components = URLComponents()
@@ -68,6 +71,10 @@ class WebSocketClient {
             webSocketTask = URLSession.shared.webSocketTask(with: url)
             webSocketTask?.resume()
 
+            DispatchQueue.main.async {
+                self.isConnected = true
+            }
+
             // Start receiving messages
             Task {
                 await authenticate()
@@ -85,6 +92,11 @@ class WebSocketClient {
     }
 
     func disconnect() {
+
+        DispatchQueue.main.async {
+            self.isConnected = false
+        }
+
         webSocketTask?.cancel(with: .goingAway, reason: nil)
     }
 
@@ -362,6 +374,11 @@ class WebSocketClient {
         logger.debug("Handling pong: \(json, privacy: .private)")
         isWaitingForPong = false
         pingId += 1
+
+        DispatchQueue.main.async {
+            self.totalPings += 1
+        }
+
     }
 
     private func handleResult(_ json: [String: Any]) {
