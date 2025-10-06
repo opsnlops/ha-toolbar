@@ -11,23 +11,47 @@ struct HomeAssistantWidgetEntryView: View {
         case .systemSmall:
             SmallWidgetView(snapshot: entry.snapshot)
                 .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         case .systemMedium:
             MediumWidgetView(snapshot: entry.snapshot, displayStyle: entry.configuration.displayStyle)
                 .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         case .systemLarge, .systemExtraLarge:
             LargeWidgetView(snapshot: entry.snapshot)
                 .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         #if os(iOS)
         case .accessoryCircular:
             AccessoryCircularView(snapshot: entry.snapshot)
+                .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         case .accessoryRectangular:
             AccessoryRectangularView(snapshot: entry.snapshot)
+                .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         case .accessoryInline:
             AccessoryInlineView(snapshot: entry.snapshot)
+                .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         #endif
         default:
             LargeWidgetView(snapshot: entry.snapshot)
                 .widgetAccentable()
+                .containerBackground(for: .widget) {
+                    Color.clear
+                }
         }
     }
 }
@@ -61,63 +85,63 @@ struct SmallWidgetView: View {
     }
 
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(spacing: 0) {
+            Spacer()
+
             // Temperature gauge
             ZStack {
                 Circle()
-                    .stroke(temperatureColor.opacity(0.2), lineWidth: 8)
-                    .frame(width: 80, height: 80)
+                    .stroke(temperatureColor.opacity(0.2), lineWidth: 10)
+                    .frame(width: 110, height: 110)
 
                 Circle()
                     .trim(from: 0, to: CGFloat(gaugeProgress))
-                    .stroke(temperatureColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                    .frame(width: 80, height: 80)
+                    .stroke(temperatureColor, style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                    .frame(width: 110, height: 110)
                     .rotationEffect(.degrees(-90))
 
                 VStack(spacing: 0) {
                     Image(systemName: "thermometer.medium")
-                        .font(.system(size: 20))
+                        .font(.system(size: 26))
                         .foregroundStyle(temperatureColor)
                     Text(String(format: "%.0f", snapshot.outsideTemperature))
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
                         .foregroundStyle(temperatureColor)
                     Text("°F")
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
             }
 
             Spacer()
+                .frame(maxHeight: 12)
 
-            // Compact stats
-            HStack(spacing: 8) {
-                HStack(spacing: 3) {
-                    Image(systemName: "wind")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.secondary)
-                    Text(String(format: "%.0f", snapshot.windSpeed))
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                }
+            // High/Low temps if available
+            if snapshot.temperatureMax > 0 || snapshot.temperatureMin > 0 {
+                HStack(spacing: 12) {
+                    if snapshot.temperatureMax > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "arrow.up")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(String(format: "%.0f°", snapshot.temperatureMax))
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(.orange.opacity(0.8))
+                    }
 
-                HStack(spacing: 3) {
-                    Image(systemName: "drop.fill")
-                        .font(.system(size: 10))
-                        .foregroundStyle(.blue)
-                    Text(String(format: "%.1f", snapshot.rainAmount))
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
-                }
-
-                if snapshot.humidity > 0 {
-                    HStack(spacing: 3) {
-                        Image(systemName: "humidity.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.teal)
-                        Text(String(format: "%.0f", snapshot.humidity))
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    if snapshot.temperatureMin > 0 {
+                        HStack(spacing: 3) {
+                            Image(systemName: "arrow.down")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text(String(format: "%.0f°", snapshot.temperatureMin))
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        }
+                        .foregroundStyle(.cyan.opacity(0.8))
                     }
                 }
             }
-            .foregroundStyle(.secondary)
+
+            Spacer()
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -149,10 +173,19 @@ struct MediumWidgetView: View {
         }
     }
 
+    var pm25Color: Color {
+        switch snapshot.pm25 {
+        case ..<12: return .green
+        case 12..<35: return .yellow
+        case 35..<55: return .orange
+        default: return .red
+        }
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             // Left: Temperature
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .center, spacing: 8) {
                 HStack(spacing: 6) {
                     Image(systemName: "thermometer.medium")
                         .font(.system(size: 14, weight: .medium))
@@ -196,40 +229,72 @@ struct MediumWidgetView: View {
                     }
                 }
             }
-            .padding()
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
 
             Divider()
                 .opacity(0.2)
 
-            // Right: Wind, Rain & Humidity
-            VStack(spacing: 12) {
-                SimpleSensorRow(
-                    icon: "wind",
-                    label: "Wind Speed",
-                    value: String(format: "%.1f", snapshot.windSpeed),
-                    unit: "mph",
-                    color: windColor
-                )
+            // Right: 2x3 Grid of sensors
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    CompactSensorBox(
+                        icon: "wind",
+                        label: "Wind",
+                        value: String(format: "%.1f", snapshot.windSpeed),
+                        unit: "mph",
+                        color: windColor
+                    )
 
-                SimpleSensorRow(
-                    icon: "drop.fill",
-                    label: "Rain Today",
-                    value: String(format: "%.2f", snapshot.rainAmount),
-                    unit: "mm",
-                    color: .blue
-                )
+                    if snapshot.windSpeedMax > 0 {
+                        CompactSensorBox(
+                            icon: "wind.circle",
+                            label: "Gust",
+                            value: String(format: "%.1f", snapshot.windSpeedMax),
+                            unit: "mph",
+                            color: windColor.opacity(0.7)
+                        )
+                    }
+                }
+
+                HStack(spacing: 10) {
+                    CompactSensorBox(
+                        icon: "drop.fill",
+                        label: "Rain",
+                        value: String(format: "%.1f", snapshot.rainAmount),
+                        unit: "mm",
+                        color: .blue
+                    )
+
+                    if snapshot.pm25 > 0 {
+                        CompactSensorBox(
+                            icon: "circle.hexagongrid",
+                            label: "PM2.5",
+                            value: String(format: "%.0f", snapshot.pm25),
+                            unit: "µg",
+                            color: pm25Color
+                        )
+                    }
+                }
 
                 if snapshot.humidity > 0 {
-                    SimpleSensorRow(
-                        icon: "humidity.fill",
-                        label: "Humidity",
-                        value: String(format: "%.0f", snapshot.humidity),
-                        unit: "%",
-                        color: .teal
-                    )
+                    HStack(spacing: 10) {
+                        CompactSensorBox(
+                            icon: "humidity.fill",
+                            label: "Humid",
+                            value: String(format: "%.0f", snapshot.humidity),
+                            unit: "%",
+                            color: .teal
+                        )
+
+                        Spacer()
+                            .frame(maxWidth: .infinity)
+                    }
                 }
             }
-            .padding()
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -260,6 +325,38 @@ struct SimpleSensorRow: View {
                     .foregroundStyle(color)
                 Text(unit)
                     .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Compact Sensor Box (for grid layout)
+struct CompactSensorBox: View {
+    let icon: String
+    let label: String
+    let value: String
+    let unit: String
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                Text(unit)
+                    .font(.system(size: 9, weight: .medium))
                     .foregroundStyle(.secondary)
             }
         }
@@ -316,36 +413,36 @@ struct LargeWidgetView: View {
             // Header
             HStack {
                 Image(systemName: "house.fill")
-                    .font(.system(size: 12))
+                    .font(.system(size: 13))
                 Text("Home Assistant")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
                 Spacer()
             }
-            .padding(.horizontal)
-            .padding(.top)
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
             .padding(.bottom, 12)
 
             // Main content grid
             VStack(spacing: 16) {
                 // Temperature - Large feature
-                HStack(spacing: 16) {
+                HStack(spacing: 18) {
                     ZStack {
                         Circle()
-                            .stroke(temperatureColor.opacity(0.2), lineWidth: 6)
-                            .frame(width: 70, height: 70)
+                            .stroke(temperatureColor.opacity(0.2), lineWidth: 8)
+                            .frame(width: 80, height: 80)
 
                         Circle()
                             .trim(from: 0, to: CGFloat(min(snapshot.outsideTemperature / 100, 1.0)))
-                            .stroke(temperatureColor, style: StrokeStyle(lineWidth: 6, lineCap: .round))
-                            .frame(width: 70, height: 70)
+                            .stroke(temperatureColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
+                            .frame(width: 80, height: 80)
                             .rotationEffect(.degrees(-90))
 
                         VStack(spacing: 0) {
                             Image(systemName: "thermometer.medium")
-                                .font(.system(size: 16))
+                                .font(.system(size: 18))
                                 .foregroundStyle(temperatureColor)
                             Text(String(format: "%.0f", snapshot.outsideTemperature))
-                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .font(.system(size: 24, weight: .bold, design: .rounded))
                                 .foregroundStyle(temperatureColor)
                         }
                     }
@@ -356,10 +453,10 @@ struct LargeWidgetView: View {
 
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text(String(format: "%.1f", snapshot.outsideTemperature))
-                                .font(.system(size: 36, weight: .bold, design: .rounded))
+                                .font(.system(size: 42, weight: .bold, design: .rounded))
                                 .foregroundStyle(temperatureColor)
                             Text("°F")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
 
@@ -369,9 +466,9 @@ struct LargeWidgetView: View {
                                 if snapshot.temperatureMax > 0 {
                                     HStack(spacing: 3) {
                                         Image(systemName: "arrow.up")
-                                            .font(.system(size: 10, weight: .semibold))
+                                            .font(.system(size: 11, weight: .semibold))
                                         Text(String(format: "%.0f°", snapshot.temperatureMax))
-                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                                     }
                                     .foregroundStyle(.orange.opacity(0.8))
                                 }
@@ -379,9 +476,9 @@ struct LargeWidgetView: View {
                                 if snapshot.temperatureMin > 0 {
                                     HStack(spacing: 3) {
                                         Image(systemName: "arrow.down")
-                                            .font(.system(size: 10, weight: .semibold))
+                                            .font(.system(size: 11, weight: .semibold))
                                         Text(String(format: "%.0f°", snapshot.temperatureMin))
-                                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                                            .font(.system(size: 13, weight: .semibold, design: .rounded))
                                     }
                                     .foregroundStyle(.cyan.opacity(0.8))
                                 }
@@ -391,21 +488,22 @@ struct LargeWidgetView: View {
 
                     Spacer()
                 }
-                .padding()
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
 
                 //Wind & Air Quality Row
-                HStack(spacing: 10) {
-                    CompactSensorCard(
+                HStack(spacing: 8) {
+                    LargeSensorCard(
                         icon: "wind",
-                        label: "Wind",
+                        label: !snapshot.windDirection.isEmpty ? "Wind (\(snapshot.windDirection))" : "Wind",
                         value: String(format: "%.1f", snapshot.windSpeed),
                         unit: "mph",
-                        detail: !snapshot.windDirection.isEmpty ? snapshot.windDirection : nil,
+                        detail: nil,
                         color: windColor
                     )
 
                     if snapshot.windSpeedMax > 0 {
-                        CompactSensorCard(
+                        LargeSensorCard(
                             icon: "wind.circle",
                             label: "Max Gust",
                             value: String(format: "%.1f", snapshot.windSpeedMax),
@@ -415,7 +513,7 @@ struct LargeWidgetView: View {
                         )
                     }
 
-                    CompactSensorCard(
+                    LargeSensorCard(
                         icon: "aqi.medium",
                         label: "AQI",
                         value: String(format: "%.0f", snapshot.aqi),
@@ -423,20 +521,12 @@ struct LargeWidgetView: View {
                         detail: nil,
                         color: aqiColor
                     )
-
-                    CompactSensorCard(
-                        icon: "circle.hexagongrid",
-                        label: "PM2.5",
-                        value: String(format: "%.0f", snapshot.pm25),
-                        unit: "µg/m³",
-                        detail: nil,
-                        color: pm25Color
-                    )
                 }
+                .padding(.horizontal, 16)
 
                 // Rain & Environmental Row
-                HStack(spacing: 10) {
-                    CompactSensorCard(
+                HStack(spacing: 8) {
+                    LargeSensorCard(
                         icon: "drop.fill",
                         label: "Rain",
                         value: String(format: "%.2f", snapshot.rainAmount),
@@ -445,8 +535,17 @@ struct LargeWidgetView: View {
                         color: .blue
                     )
 
+                    LargeSensorCard(
+                        icon: "circle.hexagongrid",
+                        label: "PM2.5",
+                        value: String(format: "%.0f", snapshot.pm25),
+                        unit: "µg/m³",
+                        detail: nil,
+                        color: pm25Color
+                    )
+
                     if snapshot.humidity > 0 {
-                        CompactSensorCard(
+                        LargeSensorCard(
                             icon: "humidity.fill",
                             label: "Humidity",
                             value: String(format: "%.0f", snapshot.humidity),
@@ -457,7 +556,7 @@ struct LargeWidgetView: View {
                     }
 
                     if snapshot.lightLevel > 0 {
-                        CompactSensorCard(
+                        LargeSensorCard(
                             icon: "sun.max.fill",
                             label: "Light",
                             value: String(format: "%.0f", snapshot.lightLevel),
@@ -467,9 +566,9 @@ struct LargeWidgetView: View {
                         )
                     }
                 }
+                .padding(.horizontal, 16)
             }
-            .padding(.horizontal)
-            .padding(.bottom)
+            .padding(.bottom, 14)
         }
     }
 
@@ -522,7 +621,7 @@ struct CompactSensorCard: View {
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
+        VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 3) {
                 Image(systemName: icon)
                     .font(.system(size: 9, weight: .medium))
@@ -550,7 +649,51 @@ struct CompactSensorCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(8)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 5)
+    }
+}
+
+// MARK: - Large Sensor Card (for readable large widget)
+struct LargeSensorCard: View {
+    let icon: String
+    let label: String
+    let value: String
+    let unit: String
+    let detail: String?
+    let color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(color)
+                Text(label)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
+
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .foregroundStyle(color)
+                if !unit.isEmpty {
+                    Text(unit)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if let detail = detail {
+                Text(detail)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 8)
     }
 }
 
@@ -692,6 +835,9 @@ struct CarPlayWidgetView: View {
             .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .containerBackground(for: .widget) {
+            Color.clear
+        }
     }
 }
 #endif
