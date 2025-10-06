@@ -88,22 +88,22 @@ class WebSocketClient : ObservableObject {
         #endif
     }
 
-    func makeWebsocketURL() -> URL {
+    func makeWebsocketURL() -> URL? {
         var components = URLComponents()
         components.host = serverHostname
         components.port = serverPort
         components.scheme = serverUseTLS ? "wss" : "ws"
         components.path.append("/api/websocket")
-        return components.url!
+        return components.url
     }
 
-    func makeReadStateURL() -> URL {
+    func makeReadStateURL() -> URL? {
         var components = URLComponents()
         components.host = serverHostname
         components.port = serverPort
         components.scheme = serverUseTLS ? "https" : "http"
         components.path.append("/api/states/")
-        return components.url!
+        return components.url
     }
 
 
@@ -121,7 +121,11 @@ class WebSocketClient : ObservableObject {
 
         if let serverHostname {
             logger.info("Using hostname: \(serverHostname)")
-            let url = makeWebsocketURL()
+            guard let url = makeWebsocketURL() else {
+                logger.error("Failed to create WebSocket URL")
+                return .failure(.invalidConfiguration)
+            }
+
             webSocketTask = URLSession.shared.webSocketTask(with: url)
             webSocketTask?.resume()
 
@@ -157,7 +161,11 @@ class WebSocketClient : ObservableObject {
 
     func readSensorState(_ entity: String) async -> Result<String, ServerError> {
 
-        let baseUrl = makeReadStateURL()
+        guard let baseUrl = makeReadStateURL() else {
+            logger.error("Failed to create REST API URL")
+            return .failure(.invalidConfiguration)
+        }
+
         let url = baseUrl.appendingPathComponent(entity)
 
         var request = URLRequest(url: url)
@@ -277,10 +285,10 @@ class WebSocketClient : ObservableObject {
                 //logger.debug("Parsed message with type: \(messageType, privacy: .public)")
                 routeMessage(json, type: messageType)
             } else {
-                logger.error("Invalid JSON structure in message.")
+                logger.warning("Invalid JSON structure in message: \(text, privacy: .public)")
             }
         } catch {
-            logger.error("Failed to parse JSON message: \(error.localizedDescription)")
+            logger.warning("Failed to parse JSON message: \(error.localizedDescription). Message: \(text, privacy: .public)")
         }
     }
 
@@ -343,34 +351,52 @@ class WebSocketClient : ObservableObject {
         // Now that we know we're authed, use the REST API to get the current state
         // of the sensors
 
-        let temperatureResponse = await readSensorState(outsideTemperatureEntity)
-        switch (temperatureResponse) {
-            case .success(let temperature):
-                DispatchQueue.main.async {
-                    self.sensorData.updateOutsideTemperature(Double(temperature)!)
-                }
-            case .failure(let error):
-                logger.error("Failed to read temperature initial state: \(error.localizedDescription)")
+        if !outsideTemperatureEntity.isEmpty {
+            let temperatureResponse = await readSensorState(outsideTemperatureEntity)
+            switch (temperatureResponse) {
+                case .success(let temperature):
+                    if let temperatureValue = Double(temperature) {
+                        DispatchQueue.main.async {
+                            self.sensorData.updateOutsideTemperature(temperatureValue)
+                        }
+                    } else {
+                        logger.warning("Invalid temperature value received: '\(temperature)'")
+                    }
+                case .failure(let error):
+                    logger.error("Failed to read temperature initial state: \(error.localizedDescription)")
+            }
         }
 
-        let rainAmountResponse = await readSensorState(rainAmountEntity)
-        switch (rainAmountResponse) {
-            case .success(let rainAmount):
-                DispatchQueue.main.async {
-                    self.sensorData.updateRainAmount(Double(rainAmount)!)
-                }
-            case .failure(let error):
-                logger.error("Failed to read rain initial state: \(error.localizedDescription)")
+        if !rainAmountEntity.isEmpty {
+            let rainAmountResponse = await readSensorState(rainAmountEntity)
+            switch (rainAmountResponse) {
+                case .success(let rainAmount):
+                    if let rainAmountValue = Double(rainAmount) {
+                        DispatchQueue.main.async {
+                            self.sensorData.updateRainAmount(rainAmountValue)
+                        }
+                    } else {
+                        logger.warning("Invalid rain amount value received: '\(rainAmount)'")
+                    }
+                case .failure(let error):
+                    logger.error("Failed to read rain initial state: \(error.localizedDescription)")
+            }
         }
 
-        let windSpeedResponse = await readSensorState(windSpeedEntity)
-        switch (windSpeedResponse) {
-            case .success(let windSpeed):
-                DispatchQueue.main.async {
-                    self.sensorData.updateWindSpeed(Double(windSpeed)!)
-                }
-            case .failure(let error):
-                logger.error("Failed to read wind speed initial state: \(error.localizedDescription)")
+        if !windSpeedEntity.isEmpty {
+            let windSpeedResponse = await readSensorState(windSpeedEntity)
+            switch (windSpeedResponse) {
+                case .success(let windSpeed):
+                    if let windSpeedValue = Double(windSpeed) {
+                        DispatchQueue.main.async {
+                            self.sensorData.updateWindSpeed(windSpeedValue)
+                        }
+                    } else {
+                        logger.warning("Invalid wind speed value received: '\(windSpeed)'")
+                    }
+                case .failure(let error):
+                    logger.error("Failed to read wind speed initial state: \(error.localizedDescription)")
+            }
         }
 
         // Read new sensors
@@ -446,7 +472,7 @@ class WebSocketClient : ObservableObject {
             let newState = data["new_state"] as? [String: Any],
             let entityId = newState["entity_id"] as? String
         else {
-            logger.error("Invalid event structure.")
+            logger.warning("Invalid event structure, skipping event.")
             return
         }
 

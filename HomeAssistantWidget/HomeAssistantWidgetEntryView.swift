@@ -1,6 +1,17 @@
 import SwiftUI
 import WidgetKit
 
+// MARK: - Helper Functions
+
+func formatWithThousandsSeparator(_ value: Double) -> String {
+    if value >= 1000 {
+        let thousands = value / 1000.0
+        return String(format: "%.1fk", thousands)
+    } else {
+        return String(format: "%.0f", value)
+    }
+}
+
 struct HomeAssistantWidgetEntryView: View {
     @Environment(\.widgetFamily) var widgetFamily
     @Environment(\.widgetRenderingMode) var widgetRenderingMode
@@ -380,6 +391,19 @@ struct LargeWidgetView: View {
         }
     }
 
+    var gaugeProgress: Double {
+        // Use min/max temps if available, otherwise fallback to 0-100
+        guard snapshot.temperatureMin > 0 && snapshot.temperatureMax > 0 else {
+            return min(snapshot.outsideTemperature / 100, 1.0)
+        }
+
+        let range = snapshot.temperatureMax - snapshot.temperatureMin
+        guard range > 0 else { return 0.5 }
+
+        let progress = (snapshot.outsideTemperature - snapshot.temperatureMin) / range
+        return max(0, min(1.0, progress))
+    }
+
     var windColor: Color {
         switch snapshot.windSpeed {
         case ..<10: return .green
@@ -432,7 +456,7 @@ struct LargeWidgetView: View {
                             .frame(width: 80, height: 80)
 
                         Circle()
-                            .trim(from: 0, to: CGFloat(min(snapshot.outsideTemperature / 100, 1.0)))
+                            .trim(from: 0, to: CGFloat(gaugeProgress))
                             .stroke(temperatureColor, style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .frame(width: 80, height: 80)
                             .rotationEffect(.degrees(-90))
@@ -529,7 +553,7 @@ struct LargeWidgetView: View {
                     LargeSensorCard(
                         icon: "drop.fill",
                         label: "Rain",
-                        value: String(format: "%.2f", snapshot.rainAmount),
+                        value: String(format: "%.1f", snapshot.rainAmount),
                         unit: "mm",
                         detail: nil,
                         color: .blue
@@ -547,7 +571,7 @@ struct LargeWidgetView: View {
                     if snapshot.humidity > 0 {
                         LargeSensorCard(
                             icon: "humidity.fill",
-                            label: "Humidity",
+                            label: "Humid",
                             value: String(format: "%.0f", snapshot.humidity),
                             unit: "%",
                             detail: nil,
@@ -559,7 +583,7 @@ struct LargeWidgetView: View {
                         LargeSensorCard(
                             icon: "sun.max.fill",
                             label: "Light",
-                            value: String(format: "%.0f", snapshot.lightLevel),
+                            value: formatWithThousandsSeparator(snapshot.lightLevel),
                             unit: "lux",
                             detail: nil,
                             color: .yellow
@@ -664,36 +688,44 @@ struct LargeSensorCard: View {
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 3) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(color)
                 Text(label)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(value)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
                     .foregroundStyle(color)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 if !unit.isEmpty {
                     Text(unit)
-                        .font(.system(size: 10, weight: .medium))
+                        .font(.system(size: 9, weight: .medium))
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
                 }
             }
 
             if let detail = detail {
                 Text(detail)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 6)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 6)
     }
 }
 
@@ -721,9 +753,6 @@ struct AccessoryRectangularView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Home Assistant")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
             HStack {
                 Text("🌡️ \(snapshot.outsideTemperature, specifier: "%.1f")°F")
                     .font(.body)

@@ -7,6 +7,15 @@ import OSLog
 import SimpleKeychain
 import SwiftUI
 
+func formatLightLevel(_ value: Double) -> String {
+    if value >= 1000 {
+        let thousands = value / 1000.0
+        return String(format: "%.1fk", thousands)
+    } else {
+        return String(format: "%.0f", value)
+    }
+}
+
 @main
 struct HomeAssistantToolbarApp: App {
 
@@ -174,7 +183,7 @@ struct HomeAssistantToolbarApp: App {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Light")
                             .font(.headline)
-                        Text("☀️ \(sensors.lightLevel, specifier: "%.0f") lux")
+                        Text("☀️ \(formatLightLevel(sensors.lightLevel)) lux")
                     }
                 }
 
@@ -196,13 +205,26 @@ struct HomeAssistantToolbarApp: App {
                     ) { Image(systemName: "gearshape") }
                     .buttonStyle(BorderlessButtonStyle())
 
-                    Spacer()
-                    Text("💻 Events: \(sensors.totalEventsProcessed)")
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 4) {
+                            Text("💻")
+                            Text("Events: \(sensors.totalEventsProcessed)")
+                        }
                         .font(.caption)
-                    Text("🔌 \(client.isConnected ? "Connected" : "Disconnected")")
+
+                        HStack(spacing: 4) {
+                            Text("🔌")
+                            Text(client.isConnected ? "Connected" : "Disconnected")
+                        }
                         .font(.caption)
-                    Text("📡 Pings: \(client.totalPings)")
+
+                        HStack(spacing: 4) {
+                            Text("📡")
+                            Text("Pings: \(client.totalPings)")
+                        }
                         .font(.caption)
+                    }
+
                     Spacer()
 
                     Button( action: {

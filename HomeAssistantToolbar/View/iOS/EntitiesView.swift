@@ -3,6 +3,15 @@ import OSLog
 import SimpleKeychain
 import SwiftUI
 
+func formatLightLeveliOS(_ value: Double) -> String {
+    if value >= 1000 {
+        let thousands = value / 1000.0
+        return String(format: "%.1fk", thousands)
+    } else {
+        return String(format: "%.0f", value)
+    }
+}
+
 struct EntitiesView: View {
 
     @ObservedObject var client = WebSocketClient.shared
@@ -70,7 +79,7 @@ struct EntitiesView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Light")
                         .font(.headline)
-                    Text("☀️ Level: \(sensors.lightLevel, specifier: "%.0f") lux")
+                    Text("☀️ Level: \(formatLightLeveliOS(sensors.lightLevel)) lux")
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()

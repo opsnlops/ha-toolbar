@@ -32,6 +32,12 @@ struct NetworkSettings: View {
 
                 Section(header: Text("Server Connection")) {
                     TextField("External Hostname", text: $externalHostname)
+                        #if os(iOS)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        #else
+                        .disableAutocorrection(true)
+                        #endif
                         .onChange(of: externalHostname) {
                             saveExternalHostname()
                         }
