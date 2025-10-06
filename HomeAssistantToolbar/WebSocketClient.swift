@@ -1,6 +1,12 @@
 import Foundation
+import Network
 import OSLog
 import SwiftUI
+#if os(macOS)
+import AppKit
+#elseif os(iOS)
+import UIKit
+#endif
 
 struct EntityState: Decodable {
     let state: String
@@ -21,6 +27,14 @@ class WebSocketClient : ObservableObject {
     @AppStorage("outsideTemperatureEntity") private var outsideTemperatureEntity: String = ""
     @AppStorage("windSpeedEntity") private var windSpeedEntity: String = ""
     @AppStorage("rainAmountEntity") private var rainAmountEntity: String = ""
+    @AppStorage("temperatureMaxEntity") private var temperatureMaxEntity: String = ""
+    @AppStorage("temperatureMinEntity") private var temperatureMinEntity: String = ""
+    @AppStorage("humidityEntity") private var humidityEntity: String = ""
+    @AppStorage("windSpeedMaxEntity") private var windSpeedMaxEntity: String = ""
+    @AppStorage("pm25Entity") private var pm25Entity: String = ""
+    @AppStorage("lightLevelEntity") private var lightLevelEntity: String = ""
+    @AppStorage("aqiEntity") private var aqiEntity: String = ""
+    @AppStorage("windDirectionEntity") private var windDirectionEntity: String = ""
 
     private var serverHostname: String?
     private var authToken: String?
@@ -33,6 +47,46 @@ class WebSocketClient : ObservableObject {
 
     @Published var isConnected: Bool = false
     @Published var totalPings: Int = 0
+
+    private let networkMonitor = NWPathMonitor()
+    private let networkQueue = DispatchQueue(label: "NetworkMonitor")
+    private var isNetworkAvailable = true
+
+    #if os(macOS)
+    private var sleepObserver: NSObjectProtocol?
+    private var wakeObserver: NSObjectProtocol?
+    #elseif os(iOS)
+    private var backgroundObserver: NSObjectProtocol?
+    private var foregroundObserver: NSObjectProtocol?
+    #endif
+
+    init() {
+        setupNetworkMonitoring()
+        #if os(macOS)
+        setupSleepWakeNotifications()
+        #elseif os(iOS)
+        setupBackgroundForegroundNotifications()
+        #endif
+    }
+
+    deinit {
+        networkMonitor.cancel()
+        #if os(macOS)
+        if let sleepObserver = sleepObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(sleepObserver)
+        }
+        if let wakeObserver = wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+        }
+        #elseif os(iOS)
+        if let backgroundObserver = backgroundObserver {
+            NotificationCenter.default.removeObserver(backgroundObserver)
+        }
+        if let foregroundObserver = foregroundObserver {
+            NotificationCenter.default.removeObserver(foregroundObserver)
+        }
+        #endif
+    }
 
     func makeWebsocketURL() -> URL {
         var components = URLComponents()
@@ -280,6 +334,10 @@ class WebSocketClient : ObservableObject {
         }
     }
 
+    func loadSensorData() async {
+        await readIntialState()
+    }
+
     private func readIntialState() async {
 
         // Now that we know we're authed, use the REST API to get the current state
@@ -313,6 +371,63 @@ class WebSocketClient : ObservableObject {
                 }
             case .failure(let error):
                 logger.error("Failed to read wind speed initial state: \(error.localizedDescription)")
+        }
+
+        // Read new sensors
+        if !temperatureMaxEntity.isEmpty {
+            let response = await readSensorState(temperatureMaxEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateTemperatureMax(doubleValue) }
+            }
+        }
+
+        if !temperatureMinEntity.isEmpty {
+            let response = await readSensorState(temperatureMinEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateTemperatureMin(doubleValue) }
+            }
+        }
+
+        if !humidityEntity.isEmpty {
+            let response = await readSensorState(humidityEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateHumidity(doubleValue) }
+            }
+        }
+
+        if !windSpeedMaxEntity.isEmpty {
+            let response = await readSensorState(windSpeedMaxEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateWindSpeedMax(doubleValue) }
+            }
+        }
+
+        if !pm25Entity.isEmpty {
+            let response = await readSensorState(pm25Entity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updatePM25(doubleValue) }
+            }
+        }
+
+        if !lightLevelEntity.isEmpty {
+            let response = await readSensorState(lightLevelEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateLightLevel(doubleValue) }
+            }
+        }
+
+        if !aqiEntity.isEmpty {
+            let response = await readSensorState(aqiEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updateAQI(doubleValue) }
+            }
+        }
+
+        if !windDirectionEntity.isEmpty {
+            let response = await readSensorState(windDirectionEntity)
+            if case .success(let value) = response {
+                DispatchQueue.main.async { self.sensorData.updateWindDirection(value) }
+            }
         }
 
     }
@@ -361,6 +476,77 @@ class WebSocketClient : ObservableObject {
                     DispatchQueue.main.async {
                         self.sensorData.updateRainAmount(rainAmount)
                         self.logger.info("Rain amount updated: \(rainAmountString)")
+                    }
+                }
+
+            case temperatureMaxEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateTemperatureMax(value)
+                        self.logger.info("Temperature max updated: \(valueString)")
+                    }
+                }
+
+            case temperatureMinEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateTemperatureMin(value)
+                        self.logger.info("Temperature min updated: \(valueString)")
+                    }
+                }
+
+            case humidityEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateHumidity(value)
+                        self.logger.info("Humidity updated: \(valueString)")
+                    }
+                }
+
+            case windSpeedMaxEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateWindSpeedMax(value)
+                        self.logger.info("Wind speed max updated: \(valueString)")
+                    }
+                }
+
+            case pm25Entity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updatePM25(value)
+                        self.logger.info("PM2.5 updated: \(valueString)")
+                    }
+                }
+
+            case lightLevelEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateLightLevel(value)
+                        self.logger.info("Light level updated: \(valueString)")
+                    }
+                }
+
+            case aqiEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateAQI(value)
+                        self.logger.info("AQI updated: \(valueString)")
+                    }
+                }
+
+            case windDirectionEntity:
+                if let valueString = newState["state"] as? String {
+                    DispatchQueue.main.async {
+                        self.sensorData.updateWindDirection(valueString)
+                        self.logger.info("Wind direction updated: \(valueString)")
                     }
                 }
 
@@ -463,5 +649,99 @@ class WebSocketClient : ObservableObject {
         // .. and reconnect
         _ = connect()
     }
+
+    private func setupNetworkMonitoring() {
+        networkMonitor.pathUpdateHandler = { [weak self] path in
+            guard let self = self else { return }
+
+            let wasAvailable = self.isNetworkAvailable
+            self.isNetworkAvailable = path.status == .satisfied
+
+            if self.isNetworkAvailable && !wasAvailable {
+                // Network came back online
+                self.logger.info("Network became available, reconnecting websocket")
+                Task {
+                    try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                    _ = self.connect()
+                }
+            } else if !self.isNetworkAvailable && wasAvailable {
+                // Network went offline
+                self.logger.info("Network became unavailable, disconnecting websocket")
+                self.stopPingTimer()
+                self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+                DispatchQueue.main.async {
+                    self.isConnected = false
+                }
+            }
+        }
+        networkMonitor.start(queue: networkQueue)
+        logger.debug("Network monitoring configured")
+    }
+
+    #if os(macOS)
+    private func setupSleepWakeNotifications() {
+        sleepObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.willSleepNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            self.logger.info("System going to sleep, disconnecting websocket")
+            self.stopPingTimer()
+            self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+            DispatchQueue.main.async {
+                self.isConnected = false
+            }
+        }
+
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            self.logger.info("System woke from sleep, reconnecting websocket")
+            // Give the network a moment to come back up
+            Task {
+                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                _ = self.connect()
+            }
+        }
+
+        logger.debug("Sleep/wake notifications configured")
+    }
+    #elseif os(iOS)
+    private func setupBackgroundForegroundNotifications() {
+        backgroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            self.logger.info("App entering background, disconnecting websocket")
+            self.stopPingTimer()
+            self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+            DispatchQueue.main.async {
+                self.isConnected = false
+            }
+        }
+
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            guard let self = self else { return }
+            self.logger.info("App entering foreground, reconnecting websocket")
+            // Give the network a moment to come back up
+            Task {
+                try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
+                _ = self.connect()
+            }
+        }
+
+        logger.debug("Background/foreground notifications configured")
+    }
+    #endif
 }
 

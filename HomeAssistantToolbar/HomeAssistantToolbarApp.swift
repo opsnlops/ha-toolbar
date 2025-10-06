@@ -10,8 +10,6 @@ import SwiftUI
 @main
 struct HomeAssistantToolbarApp: App {
 
-    @Environment(\.scenePhase) var scenePhase
-
     #if os(macOS)
     class SettingsWindowController: NSWindowController {
         static var shared: SettingsWindowController = {
@@ -38,12 +36,27 @@ struct HomeAssistantToolbarApp: App {
     let simpleKeychain = SimpleKeychain(service: "io.opsnlops.HomeAssistantToolbar", synchronizable: true)
 
     let client = WebSocketClient.shared
+    let sharedStorage = SharedSensorStorage.shared
 
     @ObservedObject var sensors = MonitoredSensors.shared
     @State private var isSettingsWindowOpen = false
 
     @State var serverHostname: String = ""
     @State var authToken: String = ""
+
+    @AppStorage("serverPort") private var serverPort: Int = 443
+    @AppStorage("serverUseTLS") private var serverUseTLS: Bool = true
+    @AppStorage("outsideTemperatureEntity") private var outsideTemperatureEntity: String = ""
+    @AppStorage("windSpeedEntity") private var windSpeedEntity: String = ""
+    @AppStorage("rainAmountEntity") private var rainAmountEntity: String = ""
+    @AppStorage("temperatureMaxEntity") private var temperatureMaxEntity: String = ""
+    @AppStorage("temperatureMinEntity") private var temperatureMinEntity: String = ""
+    @AppStorage("humidityEntity") private var humidityEntity: String = ""
+    @AppStorage("windSpeedMaxEntity") private var windSpeedMaxEntity: String = ""
+    @AppStorage("pm25Entity") private var pm25Entity: String = ""
+    @AppStorage("lightLevelEntity") private var lightLevelEntity: String = ""
+    @AppStorage("aqiEntity") private var aqiEntity: String = ""
+    @AppStorage("windDirectionEntity") private var windDirectionEntity: String = ""
 
     init()
     {
@@ -52,7 +65,15 @@ struct HomeAssistantToolbarApp: App {
             "serverUseTLS": true,
             "outsideTemperatureEntity": "sensor.outside_temperature",
             "windSpeedEntity": "sensor.wind_speed_avg",
-            "rainAmountEntity": "sensor.rain_today_mm"
+            "rainAmountEntity": "sensor.rain_today_mm",
+            "temperatureMaxEntity": "sensor.outside_temperature_24_hour_max",
+            "temperatureMinEntity": "sensor.outside_temperature_24_hour_min",
+            "humidityEntity": "sensor.outside_humidity",
+            "windSpeedMaxEntity": "sensor.outside_wind_speed_24_hour_max",
+            "pm25Entity": "sensor.outside_pm_2_5um",
+            "lightLevelEntity": "sensor.outside_light_level",
+            "aqiEntity": "sensor.airnow_aqi",
+            "windDirectionEntity": "sensor.wind_direction"
         ]
         UserDefaults.standard.register(defaults: defaultPreferences)
 
@@ -69,12 +90,29 @@ struct HomeAssistantToolbarApp: App {
             logger.debug("setting external hostname to \(extHostname)")
         }
 
-    client.configure(hostname: serverHostname, authToken: authToken)
+        client.configure(hostname: serverHostname, authToken: authToken)
 
-    #if os(macOS)
-        // Connect if we can
-        self.connect()
-    #endif
+        // Save configuration to shared storage for widget access
+        if !serverHostname.isEmpty && !authToken.isEmpty {
+            sharedStorage.saveConfiguration(
+                hostname: serverHostname,
+                port: serverPort,
+                useTLS: serverUseTLS,
+                authToken: authToken,
+                temperatureEntity: outsideTemperatureEntity,
+                windSpeedEntity: windSpeedEntity,
+                rainAmountEntity: rainAmountEntity,
+                temperatureMaxEntity: temperatureMaxEntity,
+                temperatureMinEntity: temperatureMinEntity,
+                humidityEntity: humidityEntity,
+                windSpeedMaxEntity: windSpeedMaxEntity,
+                pm25Entity: pm25Entity,
+                lightLevelEntity: lightLevelEntity,
+                aqiEntity: aqiEntity,
+                windDirectionEntity: windDirectionEntity
+            )
+            self.connect()
+        }
     }
 
     func connect() {
@@ -95,16 +133,6 @@ struct HomeAssistantToolbarApp: App {
         WindowGroup {
             TopContentView()
         }
-        .onChange(of: scenePhase, initial: false) { old, phase in
-            if (phase == .active && !authToken.isEmpty && !serverHostname.isEmpty) {
-                logger.debug("Scene is active, connecting to \(serverHostname)")
-                connect()
-            }
-            else if (phase == .background || phase == .inactive) {
-                logger.info("Scene is inactive, disconnecting from \(serverHostname)")
-                client.disconnect()
-            }
-        }
         #endif
 
 #if os(macOS)
@@ -113,12 +141,53 @@ struct HomeAssistantToolbarApp: App {
         MenuBarExtra {
 
             // Drop down menu when clicked
-            VStack {
-                Text("🌡️ Outside Temperature: \(sensors.outsideTemperature, specifier: "%.1f")°F")
-                Text("💨 Wind Speed: \(sensors.windSpeed, specifier: "%.0f") mph")
-                Text("🌧️ Rain Amount: \(sensors.rainAmount, specifier: "%.2f") mm")
+            VStack(alignment: .leading, spacing: 12) {
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Temperature")
+                        .font(.headline)
+                    Text("🌡️ Current: \(sensors.outsideTemperature, specifier: "%.1f")°F")
+                    Text("📈 24h Max: \(sensors.temperatureMax, specifier: "%.1f")°F")
+                    Text("📉 24h Min: \(sensors.temperatureMin, specifier: "%.1f")°F")
+                    Text("💧 Humidity: \(sensors.humidity, specifier: "%.0f")%")
+                }
+
                 Divider()
 
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Wind")
+                        .font(.headline)
+                    Text("💨 Current: \(sensors.windSpeed, specifier: "%.1f") mph")
+                    Text("🧭 Direction: \(sensors.windDirection)")
+                    Text("🌪️ 24h Max: \(sensors.windSpeedMax, specifier: "%.1f") mph")
+                }
+
+                Divider()
+
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Rain")
+                            .font(.headline)
+                        Text("🌧️ \(sensors.rainAmount, specifier: "%.2f") mm")
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Light")
+                            .font(.headline)
+                        Text("☀️ \(sensors.lightLevel, specifier: "%.0f") lux")
+                    }
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Air Quality")
+                        .font(.headline)
+                    Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
+                    Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
+                }
+
+                Divider()
 
                 HStack {
                     Button(action: {
@@ -128,7 +197,12 @@ struct HomeAssistantToolbarApp: App {
                     .buttonStyle(BorderlessButtonStyle())
 
                     Spacer()
-                    Text("💻 Events Processed: \(sensors.totalEventsProcessed)")
+                    Text("💻 Events: \(sensors.totalEventsProcessed)")
+                        .font(.caption)
+                    Text("🔌 \(client.isConnected ? "Connected" : "Disconnected")")
+                        .font(.caption)
+                    Text("📡 Pings: \(client.totalPings)")
+                        .font(.caption)
                     Spacer()
 
                     Button( action: {

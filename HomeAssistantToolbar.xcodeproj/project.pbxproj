@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		110B90522CDEFB990048E6C9 /* SimpleKeychain in Frameworks */ = {isa = PBXBuildFile; productRef = 110B90512CDEFB990048E6C9 /* SimpleKeychain */; };
+		113DCEEB2E931C05006945EC /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 113DCEEA2E931C05006945EC /* WidgetKit.framework */; };
+		113DCEED2E931C05006945EC /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 113DCEEC2E931C05006945EC /* SwiftUI.framework */; };
+		113DCEFC2E931C06006945EC /* HomeAssistantWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 113DCEE82E931C05006945EC /* HomeAssistantWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -25,17 +28,62 @@
 			remoteGlobalIDString = 110B90092CDEE0050048E6C9;
 			remoteInfo = HomeAssistantToolbar;
 		};
+		113DCEFA2E931C06006945EC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 110B90022CDEE0050048E6C9 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 113DCEE72E931C05006945EC;
+			remoteInfo = HomeAssistantWidgetExtension;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		113DCF012E931C06006945EC /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				113DCEFC2E931C06006945EC /* HomeAssistantWidgetExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		110B900A2CDEE0050048E6C9 /* HomeAssistantToolbar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = HomeAssistantToolbar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		110B901B2CDEE0060048E6C9 /* HomeAssistantToolbarTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HomeAssistantToolbarTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		110B90252CDEE0060048E6C9 /* HomeAssistantToolbarUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = HomeAssistantToolbarUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		113DCEE82E931C05006945EC /* HomeAssistantWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = HomeAssistantWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		113DCEEA2E931C05006945EC /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		113DCEEC2E931C05006945EC /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		113DCF0A2E931DC3006945EC /* HomeAssistantWidgetExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = HomeAssistantWidgetExtension.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		113DCEFD2E931C06006945EC /* Exceptions for "HomeAssistantWidget" folder in "HomeAssistantWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 113DCEE72E931C05006945EC /* HomeAssistantWidgetExtension */;
+		};
+		113DCF092E931CFE006945EC /* Exceptions for "HomeAssistantToolbar" folder in "HomeAssistantWidgetExtension" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Model/SharedSensorStorage.swift,
+			);
+			target = 113DCEE72E931C05006945EC /* HomeAssistantWidgetExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		110B900C2CDEE0050048E6C9 /* HomeAssistantToolbar */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				113DCF092E931CFE006945EC /* Exceptions for "HomeAssistantToolbar" folder in "HomeAssistantWidgetExtension" target */,
+			);
 			path = HomeAssistantToolbar;
 			sourceTree = "<group>";
 		};
@@ -47,6 +95,14 @@
 		110B90282CDEE0060048E6C9 /* HomeAssistantToolbarUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = HomeAssistantToolbarUITests;
+			sourceTree = "<group>";
+		};
+		113DCEEE2E931C05006945EC /* HomeAssistantWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				113DCEFD2E931C06006945EC /* Exceptions for "HomeAssistantWidget" folder in "HomeAssistantWidgetExtension" target */,
+			);
+			path = HomeAssistantWidget;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -74,15 +130,27 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		113DCEE52E931C05006945EC /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				113DCEED2E931C05006945EC /* SwiftUI.framework in Frameworks */,
+				113DCEEB2E931C05006945EC /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		110B90012CDEE0050048E6C9 = {
 			isa = PBXGroup;
 			children = (
+				113DCF0A2E931DC3006945EC /* HomeAssistantWidgetExtension.entitlements */,
 				110B900C2CDEE0050048E6C9 /* HomeAssistantToolbar */,
 				110B901E2CDEE0060048E6C9 /* HomeAssistantToolbarTests */,
 				110B90282CDEE0060048E6C9 /* HomeAssistantToolbarUITests */,
+				113DCEEE2E931C05006945EC /* HomeAssistantWidget */,
+				113DCEE92E931C05006945EC /* Frameworks */,
 				110B900B2CDEE0050048E6C9 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -93,8 +161,18 @@
 				110B900A2CDEE0050048E6C9 /* HomeAssistantToolbar.app */,
 				110B901B2CDEE0060048E6C9 /* HomeAssistantToolbarTests.xctest */,
 				110B90252CDEE0060048E6C9 /* HomeAssistantToolbarUITests.xctest */,
+				113DCEE82E931C05006945EC /* HomeAssistantWidgetExtension.appex */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		113DCEE92E931C05006945EC /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				113DCEEA2E931C05006945EC /* WidgetKit.framework */,
+				113DCEEC2E931C05006945EC /* SwiftUI.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -107,10 +185,12 @@
 				110B90062CDEE0050048E6C9 /* Sources */,
 				110B90072CDEE0050048E6C9 /* Frameworks */,
 				110B90082CDEE0050048E6C9 /* Resources */,
+				113DCF012E931C06006945EC /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				113DCEFB2E931C06006945EC /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				110B900C2CDEE0050048E6C9 /* HomeAssistantToolbar */,
@@ -169,6 +249,28 @@
 			productReference = 110B90252CDEE0060048E6C9 /* HomeAssistantToolbarUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		113DCEE72E931C05006945EC /* HomeAssistantWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 113DCEFE2E931C06006945EC /* Build configuration list for PBXNativeTarget "HomeAssistantWidgetExtension" */;
+			buildPhases = (
+				113DCEE42E931C05006945EC /* Sources */,
+				113DCEE52E931C05006945EC /* Frameworks */,
+				113DCEE62E931C05006945EC /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				113DCEEE2E931C05006945EC /* HomeAssistantWidget */,
+			);
+			name = HomeAssistantWidgetExtension;
+			packageProductDependencies = (
+			);
+			productName = HomeAssistantWidgetExtension;
+			productReference = 113DCEE82E931C05006945EC /* HomeAssistantWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -176,7 +278,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
+				LastSwiftUpdateCheck = 2600;
 				LastUpgradeCheck = 1610;
 				TargetAttributes = {
 					110B90092CDEE0050048E6C9 = {
@@ -189,6 +291,9 @@
 					110B90242CDEE0060048E6C9 = {
 						CreatedOnToolsVersion = 16.1;
 						TestTargetID = 110B90092CDEE0050048E6C9;
+					};
+					113DCEE72E931C05006945EC = {
+						CreatedOnToolsVersion = 26.0.1;
 					};
 				};
 			};
@@ -212,6 +317,7 @@
 				110B90092CDEE0050048E6C9 /* HomeAssistantToolbar */,
 				110B901A2CDEE0060048E6C9 /* HomeAssistantToolbarTests */,
 				110B90242CDEE0060048E6C9 /* HomeAssistantToolbarUITests */,
+				113DCEE72E931C05006945EC /* HomeAssistantWidgetExtension */,
 			);
 		};
 /* End PBXProject section */
@@ -232,6 +338,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		110B90232CDEE0060048E6C9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		113DCEE62E931C05006945EC /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -262,6 +375,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		113DCEE42E931C05006945EC /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -275,12 +395,18 @@
 			target = 110B90092CDEE0050048E6C9 /* HomeAssistantToolbar */;
 			targetProxy = 110B90262CDEE0060048E6C9 /* PBXContainerItemProxy */;
 		};
+		113DCEFB2E931C06006945EC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 113DCEE72E931C05006945EC /* HomeAssistantWidgetExtension */;
+			targetProxy = 113DCEFA2E931C06006945EC /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		110B902D2CDEE0060048E6C9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -334,6 +460,8 @@
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -342,6 +470,7 @@
 		110B902E2CDEE0060048E6C9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -388,6 +517,8 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
@@ -425,6 +556,7 @@
 				MARKETING_VERSION = 0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
@@ -469,6 +601,7 @@
 				MARKETING_VERSION = 0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
 				SDKROOT = auto;
 				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
 				SUPPORTS_MACCATALYST = NO;
@@ -570,6 +703,88 @@
 			};
 			name = Release;
 		};
+		113DCEFF2E931C06006945EC /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HomeAssistantWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = YQ8A74NDMJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HomeAssistantWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HomeAssistantWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.6;
+				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar.HomeAssistantWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,3";
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Debug;
+		};
+		113DCF002E931C06006945EC /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALLOW_TARGET_PLATFORM_SPECIALIZATION = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = HomeAssistantWidgetExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 6;
+				DEVELOPMENT_TEAM = YQ8A74NDMJ;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = HomeAssistantWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = HomeAssistantWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 0.6;
+				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar.HomeAssistantWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				REGISTER_APP_GROUPS = YES;
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = "appletvos appletvsimulator iphoneos iphonesimulator macosx";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,3";
+				TVOS_DEPLOYMENT_TARGET = 26.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -605,6 +820,15 @@
 			buildConfigurations = (
 				110B90362CDEE0060048E6C9 /* Debug */,
 				110B90372CDEE0060048E6C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		113DCEFE2E931C06006945EC /* Build configuration list for PBXNativeTarget "HomeAssistantWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				113DCEFF2E931C06006945EC /* Debug */,
+				113DCF002E931C06006945EC /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
