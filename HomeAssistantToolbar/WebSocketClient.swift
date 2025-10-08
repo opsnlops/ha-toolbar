@@ -659,9 +659,11 @@ class WebSocketClient : ObservableObject {
 
         logger.debug("stopping any ping timers")
 
-        self.isWaitingForPong = false
-        pingTimer?.invalidate()
-        pingTimer = nil
+        DispatchQueue.main.async {
+            self.isWaitingForPong = false
+            self.pingTimer?.invalidate()
+            self.pingTimer = nil
+        }
     }
 
     private func reconnect() {
