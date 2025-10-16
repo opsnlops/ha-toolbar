@@ -531,7 +531,7 @@
 				CODE_SIGN_ENTITLEMENTS = HomeAssistantToolbar/HomeAssistantToolbarDebug.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = adfaab2;
+				CURRENT_PROJECT_VERSION = 3178c6a;
 				DEVELOPMENT_ASSET_PATHS = "\"HomeAssistantToolbar/Preview Content\"";
 				DEVELOPMENT_TEAM = YQ8A74NDMJ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -552,7 +552,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -575,7 +575,7 @@
 				CODE_SIGN_ENTITLEMENTS = HomeAssistantToolbar/HomeAssistantToolbar.entitlements;
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = adfaab2;
+				CURRENT_PROJECT_VERSION = 3178c6a;
 				DEVELOPMENT_ASSET_PATHS = "\"HomeAssistantToolbar/Preview Content\"";
 				DEVELOPMENT_TEAM = YQ8A74NDMJ;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -596,7 +596,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -709,7 +709,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = HomeAssistantWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = adfaab2;
+				CURRENT_PROJECT_VERSION = 3178c6a;
 				DEVELOPMENT_TEAM = YQ8A74NDMJ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -724,7 +724,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar.HomeAssistantWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -750,7 +750,7 @@
 				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
 				CODE_SIGN_ENTITLEMENTS = HomeAssistantWidgetExtension.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = adfaab2;
+				CURRENT_PROJECT_VERSION = 3178c6a;
 				DEVELOPMENT_TEAM = YQ8A74NDMJ;
 				ENABLE_APP_SANDBOX = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
@@ -765,7 +765,7 @@
 					"@executable_path/../../../../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
-				MARKETING_VERSION = 1.1.0;
+				MARKETING_VERSION = 1.1.1;
 				PRODUCT_BUNDLE_IDENTIFIER = io.opsnlops.HomeAssistantToolbar.HomeAssistantWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
