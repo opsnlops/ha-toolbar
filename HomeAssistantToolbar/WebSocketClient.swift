@@ -18,6 +18,7 @@ class WebSocketClient : ObservableObject {
     static let shared = WebSocketClient()
 
     private var webSocketTask: URLSessionWebSocketTask?
+    private var restAPISession: URLSession?
 
     let logger = Logger(subsystem: "io.opsnlops.HomeAssistantToolbar", category: "WebSocketClient")
 
@@ -61,12 +62,21 @@ class WebSocketClient : ObservableObject {
     #endif
 
     init() {
+        createRESTAPISession()
         setupNetworkMonitoring()
         #if os(macOS)
         setupSleepWakeNotifications()
         #elseif os(iOS)
         setupBackgroundForegroundNotifications()
         #endif
+    }
+
+    private func createRESTAPISession() {
+        let configuration = URLSessionConfiguration.default
+        configuration.timeoutIntervalForRequest = 30
+        configuration.timeoutIntervalForResource = 60
+        restAPISession = URLSession(configuration: configuration)
+        logger.debug("Created REST API session")
     }
 
     deinit {
@@ -166,6 +176,11 @@ class WebSocketClient : ObservableObject {
             return .failure(.invalidConfiguration)
         }
 
+        guard let session = restAPISession else {
+            logger.error("REST API session not available")
+            return .failure(.invalidConfiguration)
+        }
+
         let url = baseUrl.appendingPathComponent(entity)
 
         var request = URLRequest(url: url)
@@ -174,7 +189,7 @@ class WebSocketClient : ObservableObject {
         request.addValue("Bearer \(authToken ?? "uh-oh")", forHTTPHeaderField: "Authorization")
 
         do {
-            let (data, _) = try await URLSession.shared.data(for: request)
+            let (data, _) = try await session.data(for: request)
             let entityData = try JSONDecoder().decode(EntityState.self, from: data)
 
             logger.debug("Read sensor state: \(entityData.state)")
@@ -687,16 +702,19 @@ class WebSocketClient : ObservableObject {
 
             if self.isNetworkAvailable && !wasAvailable {
                 // Network came back online
-                self.logger.info("Network became available, reconnecting websocket")
+                self.logger.info("Network became available, recreating REST API session and reconnecting websocket")
+                self.createRESTAPISession()
                 Task {
                     try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
                     _ = self.connect()
                 }
             } else if !self.isNetworkAvailable && wasAvailable {
                 // Network went offline
-                self.logger.info("Network became unavailable, disconnecting websocket")
+                self.logger.info("Network became unavailable, disconnecting websocket and invalidating REST API session")
                 self.stopPingTimer()
                 self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+                self.restAPISession?.invalidateAndCancel()
+                self.restAPISession = nil
                 DispatchQueue.main.async {
                     self.isConnected = false
                 }
@@ -714,9 +732,11 @@ class WebSocketClient : ObservableObject {
             queue: .main
         ) { [weak self] _ in
             guard let self = self else { return }
-            self.logger.info("System going to sleep, disconnecting websocket")
+            self.logger.info("System going to sleep, disconnecting websocket and invalidating REST API session")
             self.stopPingTimer()
             self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+            self.restAPISession?.invalidateAndCancel()
+            self.restAPISession = nil
             DispatchQueue.main.async {
                 self.isConnected = false
             }
@@ -728,7 +748,9 @@ class WebSocketClient : ObservableObject {
             queue: .main
         ) { [weak self] _ in
             guard let self = self else { return }
-            self.logger.info("System woke from sleep, reconnecting websocket")
+            self.logger.info("System woke from sleep, recreating REST API session and reconnecting websocket")
+            // Recreate the REST API session first
+            self.createRESTAPISession()
             // Give the network a moment to come back up
             Task {
                 try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
@@ -746,9 +768,11 @@ class WebSocketClient : ObservableObject {
             queue: .main
         ) { [weak self] _ in
             guard let self = self else { return }
-            self.logger.info("App entering background, disconnecting websocket")
+            self.logger.info("App entering background, disconnecting websocket and invalidating REST API session")
             self.stopPingTimer()
             self.webSocketTask?.cancel(with: .goingAway, reason: nil)
+            self.restAPISession?.invalidateAndCancel()
+            self.restAPISession = nil
             DispatchQueue.main.async {
                 self.isConnected = false
             }
@@ -760,7 +784,9 @@ class WebSocketClient : ObservableObject {
             queue: .main
         ) { [weak self] _ in
             guard let self = self else { return }
-            self.logger.info("App entering foreground, reconnecting websocket")
+            self.logger.info("App entering foreground, recreating REST API session and reconnecting websocket")
+            // Recreate the REST API session first
+            self.createRESTAPISession()
             // Give the network a moment to come back up
             Task {
                 try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
