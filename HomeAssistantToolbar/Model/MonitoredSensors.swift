@@ -36,7 +36,7 @@ public class MonitoredSensors: ObservableObject {
     private var aqiHistory = TrendHistory()
 
     // Thresholds for determining if a change is significant
-    private let temperatureThreshold: Double = 0.5  // ±0.5°F
+    private let temperatureThreshold: Double = 0.25  // ±0.25°F
     private let windSpeedThreshold: Double = 0.5    // ±0.5 mph
     private let humidityThreshold: Double = 2.0     // ±2%
     private let pm25Threshold: Double = 5.0         // ±5 µg/m³

@@ -27,19 +27,19 @@ class TrendHistory: Codable {
         }
     }
 
-    /// Calculate trend by comparing current value to value from 15 minutes ago
+    /// Calculate trend by comparing current value to value from 30 minutes ago
     func calculateTrend(threshold: Double) -> Trend {
         guard !dataPoints.isEmpty else { return .stable }
 
         let currentValue = dataPoints.last!.value
-        let fifteenMinutesAgo = Date().addingTimeInterval(-15 * 60)  // 15 minutes
+        let thirtyMinutesAgo = Date().addingTimeInterval(-30 * 60)  // 30 minutes
 
-        // Find the closest data point to 15 minutes ago
+        // Find the closest data point to 30 minutes ago
         let historicalPoint = dataPoints
-            .filter { $0.timestamp <= fifteenMinutesAgo }
+            .filter { $0.timestamp <= thirtyMinutesAgo }
             .last
 
-        // If we don't have data from 15 minutes ago yet, return stable
+        // If we don't have data from 30 minutes ago yet, return stable
         guard let historical = historicalPoint else { return .stable }
 
         let difference = currentValue - historical.value
