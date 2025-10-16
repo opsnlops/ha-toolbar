@@ -27,6 +27,47 @@ public class MonitoredSensors: ObservableObject {
     @Published public var aqi: Double = 0.0
     @Published public var windDirection: String = ""
 
+    // Trend tracking for sensors
+    private var temperatureHistory = TrendHistory()
+    private var windSpeedHistory = TrendHistory()
+    private var humidityHistory = TrendHistory()
+    private var pm25History = TrendHistory()
+    private var lightLevelHistory = TrendHistory()
+    private var aqiHistory = TrendHistory()
+
+    // Thresholds for determining if a change is significant
+    private let temperatureThreshold: Double = 0.5  // ±0.5°F
+    private let windSpeedThreshold: Double = 0.5    // ±0.5 mph
+    private let humidityThreshold: Double = 2.0     // ±2%
+    private let pm25Threshold: Double = 5.0         // ±5 µg/m³
+    private let aqiThreshold: Double = 5.0          // ±5 AQI
+    private let lightLevelThreshold: Double = 100.0 // ±100 lux
+
+    // Computed properties for trends
+    public var temperatureTrend: Trend {
+        temperatureHistory.calculateTrend(threshold: temperatureThreshold)
+    }
+
+    public var windSpeedTrend: Trend {
+        windSpeedHistory.calculateTrend(threshold: windSpeedThreshold)
+    }
+
+    public var humidityTrend: Trend {
+        humidityHistory.calculateTrend(threshold: humidityThreshold)
+    }
+
+    public var pm25Trend: Trend {
+        pm25History.calculateTrend(threshold: pm25Threshold)
+    }
+
+    public var lightLevelTrend: Trend {
+        lightLevelHistory.calculateTrend(threshold: lightLevelThreshold)
+    }
+
+    public var aqiTrend: Trend {
+        aqiHistory.calculateTrend(threshold: aqiThreshold)
+    }
+
     @MainActor
     public func incrementTotalEventsProcessed() {
         self.totalEventsProcessed += 1
@@ -40,7 +81,9 @@ public class MonitoredSensors: ObservableObject {
         // Only send a notification if things have actually changed
         if temperature != self.outsideTemperature {
             self.outsideTemperature = temperature
+            temperatureHistory.addDataPoint(value: temperature)
             sharedStorage.saveOutsideTemperature(temperature)
+            sharedStorage.saveTemperatureTrend(temperatureTrend)
             reloadWidgets()
         }
     }
@@ -49,7 +92,9 @@ public class MonitoredSensors: ObservableObject {
     func updateWindSpeed(_ windSpeed: Double) {
         if windSpeed != self.windSpeed {
             self.windSpeed = windSpeed
+            windSpeedHistory.addDataPoint(value: windSpeed)
             sharedStorage.saveWindSpeed(windSpeed)
+            sharedStorage.saveWindSpeedTrend(windSpeedTrend)
             reloadWidgets()
         }
 
@@ -86,7 +131,9 @@ public class MonitoredSensors: ObservableObject {
     func updateHumidity(_ humidity: Double) {
         if humidity != self.humidity {
             self.humidity = humidity
+            humidityHistory.addDataPoint(value: humidity)
             sharedStorage.saveHumidity(humidity)
+            sharedStorage.saveHumidityTrend(humidityTrend)
             reloadWidgets()
         }
     }
@@ -104,7 +151,9 @@ public class MonitoredSensors: ObservableObject {
     func updatePM25(_ pm25: Double) {
         if pm25 != self.pm25 {
             self.pm25 = pm25
+            pm25History.addDataPoint(value: pm25)
             sharedStorage.savePM25(pm25)
+            sharedStorage.savePM25Trend(pm25Trend)
             reloadWidgets()
         }
     }
@@ -113,7 +162,9 @@ public class MonitoredSensors: ObservableObject {
     func updateLightLevel(_ lightLevel: Double) {
         if lightLevel != self.lightLevel {
             self.lightLevel = lightLevel
+            lightLevelHistory.addDataPoint(value: lightLevel)
             sharedStorage.saveLightLevel(lightLevel)
+            sharedStorage.saveLightLevelTrend(lightLevelTrend)
             reloadWidgets()
         }
     }
@@ -122,7 +173,9 @@ public class MonitoredSensors: ObservableObject {
     func updateAQI(_ aqi: Double) {
         if aqi != self.aqi {
             self.aqi = aqi
+            aqiHistory.addDataPoint(value: aqi)
             sharedStorage.saveAQI(aqi)
+            sharedStorage.saveAQITrend(aqiTrend)
             reloadWidgets()
         }
     }

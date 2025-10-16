@@ -29,7 +29,13 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
                 lightLevel: 450.0,
                 aqi: 42.0,
                 windDirection: "NW",
-                lastUpdated: Date()
+                lastUpdated: Date(),
+                temperatureTrend: .stable,
+                windSpeedTrend: .stable,
+                humidityTrend: .stable,
+                pm25Trend: .stable,
+                lightLevelTrend: .stable,
+                aqiTrend: .stable
             ),
             configuration: SensorConfigurationIntent()
         )

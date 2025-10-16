@@ -118,9 +118,15 @@ struct SmallWidgetView: View {
                     Text(String(format: "%.0f", snapshot.outsideTemperature))
                         .font(.system(size: 38, weight: .bold, design: .rounded))
                         .foregroundStyle(temperatureColor)
-                    Text("°F")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 2) {
+                        Text("°F")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundStyle(.secondary)
+                        Text(snapshot.temperatureTrend.unicodeArrow)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
                 }
             }
 
@@ -206,13 +212,17 @@ struct MediumWidgetView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(String(format: "%.1f", snapshot.outsideTemperature))
                         .font(.system(size: 42, weight: .bold, design: .rounded))
                         .foregroundStyle(temperatureColor)
                     Text("°F")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.secondary)
+                    Text(snapshot.temperatureTrend.unicodeArrow)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.secondary)
+                        .opacity(0.6)
                 }
 
                 // High/Low temps if available
@@ -475,13 +485,17 @@ struct LargeWidgetView: View {
                         Text("Outside Temperature")
                             .font(.system(size: 14, weight: .semibold))
 
-                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(String(format: "%.1f", snapshot.outsideTemperature))
                                 .font(.system(size: 42, weight: .bold, design: .rounded))
                                 .foregroundStyle(temperatureColor)
                             Text("°F")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.secondary)
+                            Text(snapshot.temperatureTrend.unicodeArrow)
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(.secondary)
+                                .opacity(0.6)
                         }
 
                         // High/Low temps
@@ -797,7 +811,13 @@ struct AccessoryInlineView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            temperatureTrend: .up,
+            windSpeedTrend: .down,
+            humidityTrend: .stable,
+            pm25Trend: .down,
+            lightLevelTrend: .up,
+            aqiTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )
@@ -820,7 +840,13 @@ struct AccessoryInlineView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            temperatureTrend: .up,
+            windSpeedTrend: .down,
+            humidityTrend: .stable,
+            pm25Trend: .down,
+            lightLevelTrend: .up,
+            aqiTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )
@@ -890,7 +916,13 @@ struct CarPlayWidgetView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            temperatureTrend: .up,
+            windSpeedTrend: .down,
+            humidityTrend: .stable,
+            pm25Trend: .down,
+            lightLevelTrend: .up,
+            aqiTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )

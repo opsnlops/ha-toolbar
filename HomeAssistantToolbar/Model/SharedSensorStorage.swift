@@ -1,5 +1,36 @@
 import Foundation
 
+/// Represents the trend direction of a sensor value
+public enum Trend: String, Codable {
+    case up
+    case down
+    case stable
+
+    /// Returns an SF Symbol name for the trend
+    var symbolName: String {
+        switch self {
+        case .up:
+            return "arrow.up"
+        case .down:
+            return "arrow.down"
+        case .stable:
+            return "arrow.forward"
+        }
+    }
+
+    /// Returns a Unicode arrow character as fallback
+    var unicodeArrow: String {
+        switch self {
+        case .up:
+            return "↑"
+        case .down:
+            return "↓"
+        case .stable:
+            return "→"
+        }
+    }
+}
+
 /// Manages shared storage for sensor data between the main app and widget extension
 class SharedSensorStorage {
 
@@ -27,6 +58,14 @@ class SharedSensorStorage {
         static let windDirection = "shared.windDirection"
         static let lastUpdated = "shared.lastUpdated"
         static let totalEventsProcessed = "shared.totalEventsProcessed"
+
+        // Trend keys
+        static let temperatureTrend = "shared.trend.temperature"
+        static let windSpeedTrend = "shared.trend.windSpeed"
+        static let humidityTrend = "shared.trend.humidity"
+        static let pm25Trend = "shared.trend.pm25"
+        static let lightLevelTrend = "shared.trend.lightLevel"
+        static let aqiTrend = "shared.trend.aqi"
 
         // Configuration keys
         static let serverHostname = "shared.serverHostname"
@@ -107,6 +146,30 @@ class SharedSensorStorage {
         sharedDefaults?.set(count, forKey: Keys.totalEventsProcessed)
     }
 
+    func saveTemperatureTrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.temperatureTrend)
+    }
+
+    func saveWindSpeedTrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.windSpeedTrend)
+    }
+
+    func saveHumidityTrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.humidityTrend)
+    }
+
+    func savePM25Trend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.pm25Trend)
+    }
+
+    func saveLightLevelTrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.lightLevelTrend)
+    }
+
+    func saveAQITrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.aqiTrend)
+    }
+
     private func updateLastUpdated() {
         sharedDefaults?.set(Date(), forKey: Keys.lastUpdated)
     }
@@ -165,6 +228,38 @@ class SharedSensorStorage {
         sharedDefaults?.object(forKey: Keys.lastUpdated) as? Date
     }
 
+    func getTrend(forKey key: String) -> Trend {
+        guard let rawValue = sharedDefaults?.string(forKey: key),
+              let trend = Trend(rawValue: rawValue) else {
+            return .stable
+        }
+        return trend
+    }
+
+    func getTemperatureTrend() -> Trend {
+        getTrend(forKey: Keys.temperatureTrend)
+    }
+
+    func getWindSpeedTrend() -> Trend {
+        getTrend(forKey: Keys.windSpeedTrend)
+    }
+
+    func getHumidityTrend() -> Trend {
+        getTrend(forKey: Keys.humidityTrend)
+    }
+
+    func getPM25Trend() -> Trend {
+        getTrend(forKey: Keys.pm25Trend)
+    }
+
+    func getLightLevelTrend() -> Trend {
+        getTrend(forKey: Keys.lightLevelTrend)
+    }
+
+    func getAQITrend() -> Trend {
+        getTrend(forKey: Keys.aqiTrend)
+    }
+
     // MARK: - Snapshot Data
 
     /// Returns all sensor data as a snapshot for widget timeline entries
@@ -181,7 +276,13 @@ class SharedSensorStorage {
             lightLevel: getLightLevel(),
             aqi: getAQI(),
             windDirection: getWindDirection(),
-            lastUpdated: getLastUpdated() ?? Date()
+            lastUpdated: getLastUpdated() ?? Date(),
+            temperatureTrend: getTemperatureTrend(),
+            windSpeedTrend: getWindSpeedTrend(),
+            humidityTrend: getHumidityTrend(),
+            pm25Trend: getPM25Trend(),
+            lightLevelTrend: getLightLevelTrend(),
+            aqiTrend: getAQITrend()
         )
     }
 
@@ -298,4 +399,10 @@ struct SensorSnapshot: Codable {
     let aqi: Double
     let windDirection: String
     let lastUpdated: Date
+    let temperatureTrend: Trend
+    let windSpeedTrend: Trend
+    let humidityTrend: Trend
+    let pm25Trend: Trend
+    let lightLevelTrend: Trend
+    let aqiTrend: Trend
 }

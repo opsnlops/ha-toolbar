@@ -133,6 +133,9 @@ struct HomeAssistantAPIClient {
 
         let (tempStr, windStr, rainStr) = try await (temperature, windSpeed, rainAmount)
 
+        // Get trends from shared storage (calculated by main app)
+        let storage = SharedSensorStorage.shared
+
         return SensorSnapshot(
             outsideTemperature: Double(tempStr) ?? 0.0,
             windSpeed: Double(windStr) ?? 0.0,
@@ -145,7 +148,13 @@ struct HomeAssistantAPIClient {
             lightLevel: lightLevelStr != nil ? Double(lightLevelStr!) ?? 0.0 : 0.0,
             aqi: aqiStr != nil ? Double(aqiStr!) ?? 0.0 : 0.0,
             windDirection: windDirStr ?? "",
-            lastUpdated: Date()
+            lastUpdated: Date(),
+            temperatureTrend: storage.getTemperatureTrend(),
+            windSpeedTrend: storage.getWindSpeedTrend(),
+            humidityTrend: storage.getHumidityTrend(),
+            pm25Trend: storage.getPM25Trend(),
+            lightLevelTrend: storage.getLightLevelTrend(),
+            aqiTrend: storage.getAQITrend()
         )
     }
 }

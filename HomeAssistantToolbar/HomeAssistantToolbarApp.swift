@@ -155,10 +155,22 @@ struct HomeAssistantToolbarApp: App {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Temperature")
                         .font(.headline)
-                    Text("🌡️ Current: \(sensors.outsideTemperature, specifier: "%.1f")°F")
+                    HStack(spacing: 4) {
+                        Text("🌡️ Current: \(sensors.outsideTemperature, specifier: "%.1f")°F")
+                        Image(systemName: sensors.temperatureTrend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
                     Text("📈 24h Max: \(sensors.temperatureMax, specifier: "%.1f")°F")
                     Text("📉 24h Min: \(sensors.temperatureMin, specifier: "%.1f")°F")
-                    Text("💧 Humidity: \(sensors.humidity, specifier: "%.0f")%")
+                    HStack(spacing: 4) {
+                        Text("💧 Humidity: \(sensors.humidity, specifier: "%.0f")%")
+                        Image(systemName: sensors.humidityTrend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
                 }
 
                 Divider()
@@ -166,7 +178,13 @@ struct HomeAssistantToolbarApp: App {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Wind")
                         .font(.headline)
-                    Text("💨 Current: \(sensors.windSpeed, specifier: "%.1f") mph")
+                    HStack(spacing: 4) {
+                        Text("💨 Current: \(sensors.windSpeed, specifier: "%.1f") mph")
+                        Image(systemName: sensors.windSpeedTrend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
                     Text("🧭 Direction: \(sensors.windDirection)")
                     Text("🌪️ 24h Max: \(sensors.windSpeedMax, specifier: "%.1f") mph")
                 }
@@ -183,7 +201,13 @@ struct HomeAssistantToolbarApp: App {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Light")
                             .font(.headline)
-                        Text("☀️ \(formatLightLevel(sensors.lightLevel)) lux")
+                        HStack(spacing: 4) {
+                            Text("☀️ \(formatLightLevel(sensors.lightLevel)) lux")
+                            Image(systemName: sensors.lightLevelTrend.symbolName)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .opacity(0.6)
+                        }
                     }
                 }
 
@@ -192,8 +216,20 @@ struct HomeAssistantToolbarApp: App {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Air Quality")
                         .font(.headline)
-                    Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
-                    Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
+                    HStack(spacing: 4) {
+                        Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
+                        Image(systemName: sensors.aqiTrend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
+                    HStack(spacing: 4) {
+                        Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
+                        Image(systemName: sensors.pm25Trend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
                 }
 
                 Divider()
@@ -237,8 +273,7 @@ struct HomeAssistantToolbarApp: App {
             .padding()
         } label: {
             // Text shown in the menu bar
-            Text("\(sensors.outsideTemperature, specifier: "%.1f")°F")
-                .frame(width: 40)
+            Text("\(sensors.outsideTemperature, specifier: "%.1f")°F \(sensors.temperatureTrend.unicodeArrow)")
         }
         .menuBarExtraStyle(.window)
 #endif
