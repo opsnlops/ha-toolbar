@@ -56,6 +56,7 @@ class SharedSensorStorage {
         static let lightLevel = "shared.lightLevel"
         static let aqi = "shared.aqi"
         static let windDirection = "shared.windDirection"
+        static let pressure = "shared.pressure"
         static let lastUpdated = "shared.lastUpdated"
         static let totalEventsProcessed = "shared.totalEventsProcessed"
 
@@ -65,7 +66,7 @@ class SharedSensorStorage {
         static let humidityTrend = "shared.trend.humidity"
         static let pm25Trend = "shared.trend.pm25"
         static let lightLevelTrend = "shared.trend.lightLevel"
-        static let aqiTrend = "shared.trend.aqi"
+        static let pressureTrend = "shared.trend.pressure"
 
         // Configuration keys
         static let serverHostname = "shared.serverHostname"
@@ -83,6 +84,7 @@ class SharedSensorStorage {
         static let lightLevelEntity = "shared.lightLevelEntity"
         static let aqiEntity = "shared.aqiEntity"
         static let windDirectionEntity = "shared.windDirectionEntity"
+        static let pressureEntity = "shared.pressureEntity"
     }
 
     // MARK: - Write Methods
@@ -142,6 +144,11 @@ class SharedSensorStorage {
         updateLastUpdated()
     }
 
+    func savePressure(_ pressure: Double) {
+        sharedDefaults?.set(pressure, forKey: Keys.pressure)
+        updateLastUpdated()
+    }
+
     func saveTotalEventsProcessed(_ count: UInt64) {
         sharedDefaults?.set(count, forKey: Keys.totalEventsProcessed)
     }
@@ -166,8 +173,8 @@ class SharedSensorStorage {
         sharedDefaults?.set(trend.rawValue, forKey: Keys.lightLevelTrend)
     }
 
-    func saveAQITrend(_ trend: Trend) {
-        sharedDefaults?.set(trend.rawValue, forKey: Keys.aqiTrend)
+    func savePressureTrend(_ trend: Trend) {
+        sharedDefaults?.set(trend.rawValue, forKey: Keys.pressureTrend)
     }
 
     private func updateLastUpdated() {
@@ -220,6 +227,10 @@ class SharedSensorStorage {
         sharedDefaults?.string(forKey: Keys.windDirection) ?? ""
     }
 
+    func getPressure() -> Double {
+        sharedDefaults?.double(forKey: Keys.pressure) ?? 0.0
+    }
+
     func getTotalEventsProcessed() -> UInt64 {
         UInt64(sharedDefaults?.integer(forKey: Keys.totalEventsProcessed) ?? 0)
     }
@@ -256,8 +267,8 @@ class SharedSensorStorage {
         getTrend(forKey: Keys.lightLevelTrend)
     }
 
-    func getAQITrend() -> Trend {
-        getTrend(forKey: Keys.aqiTrend)
+    func getPressureTrend() -> Trend {
+        getTrend(forKey: Keys.pressureTrend)
     }
 
     // MARK: - Snapshot Data
@@ -276,13 +287,14 @@ class SharedSensorStorage {
             lightLevel: getLightLevel(),
             aqi: getAQI(),
             windDirection: getWindDirection(),
+            pressure: getPressure(),
             lastUpdated: getLastUpdated() ?? Date(),
             temperatureTrend: getTemperatureTrend(),
             windSpeedTrend: getWindSpeedTrend(),
             humidityTrend: getHumidityTrend(),
             pm25Trend: getPM25Trend(),
             lightLevelTrend: getLightLevelTrend(),
-            aqiTrend: getAQITrend()
+            pressureTrend: getPressureTrend()
         )
     }
 
@@ -292,7 +304,7 @@ class SharedSensorStorage {
                           temperatureEntity: String, windSpeedEntity: String, rainAmountEntity: String,
                           temperatureMaxEntity: String, temperatureMinEntity: String, humidityEntity: String,
                           windSpeedMaxEntity: String, pm25Entity: String, lightLevelEntity: String,
-                          aqiEntity: String, windDirectionEntity: String) {
+                          aqiEntity: String, windDirectionEntity: String, pressureEntity: String) {
         sharedDefaults?.set(hostname, forKey: Keys.serverHostname)
         sharedDefaults?.set(port, forKey: Keys.serverPort)
         sharedDefaults?.set(useTLS, forKey: Keys.serverUseTLS)
@@ -308,6 +320,7 @@ class SharedSensorStorage {
         sharedDefaults?.set(lightLevelEntity, forKey: Keys.lightLevelEntity)
         sharedDefaults?.set(aqiEntity, forKey: Keys.aqiEntity)
         sharedDefaults?.set(windDirectionEntity, forKey: Keys.windDirectionEntity)
+        sharedDefaults?.set(pressureEntity, forKey: Keys.pressureEntity)
     }
 
     func getServerHostname() -> String? {
@@ -370,6 +383,10 @@ class SharedSensorStorage {
         sharedDefaults?.string(forKey: Keys.windDirectionEntity)
     }
 
+    func getPressureEntity() -> String? {
+        sharedDefaults?.string(forKey: Keys.pressureEntity)
+    }
+
     func hasConfiguration() -> Bool {
         guard let hostname = getServerHostname(),
               let token = getAuthToken(),
@@ -398,11 +415,12 @@ struct SensorSnapshot: Codable {
     let lightLevel: Double
     let aqi: Double
     let windDirection: String
+    let pressure: Double
     let lastUpdated: Date
     let temperatureTrend: Trend
     let windSpeedTrend: Trend
     let humidityTrend: Trend
     let pm25Trend: Trend
     let lightLevelTrend: Trend
-    let aqiTrend: Trend
+    let pressureTrend: Trend
 }

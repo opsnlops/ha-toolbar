@@ -86,13 +86,7 @@ struct EntitiesView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Air Quality")
                         .font(.headline)
-                    HStack(spacing: 4) {
-                        Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
-                        Image(systemName: sensors.aqiTrend.symbolName)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .opacity(0.6)
-                    }
+                    Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
                     HStack(spacing: 4) {
                         Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
                         Image(systemName: sensors.pm25Trend.symbolName)
@@ -112,6 +106,22 @@ struct EntitiesView: View {
                     HStack(spacing: 4) {
                         Text("☀️ Level: \(formatLightLeveliOS(sensors.lightLevel)) lux")
                         Image(systemName: sensors.lightLevelTrend.symbolName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .opacity(0.6)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding()
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(8)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Barometer")
+                        .font(.headline)
+                    HStack(spacing: 4) {
+                        Text("🔘 Pressure: \(sensors.pressure, specifier: "%.1f") hPa")
+                        Image(systemName: sensors.pressureTrend.symbolName)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .opacity(0.6)

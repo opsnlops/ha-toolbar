@@ -29,13 +29,14 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
                 lightLevel: 450.0,
                 aqi: 42.0,
                 windDirection: "NW",
+                pressure: 1013.5,
                 lastUpdated: Date(),
                 temperatureTrend: .stable,
                 windSpeedTrend: .stable,
                 humidityTrend: .stable,
                 pm25Trend: .stable,
                 lightLevelTrend: .stable,
-                aqiTrend: .stable
+                pressureTrend: .stable
             ),
             configuration: SensorConfigurationIntent()
         )
@@ -106,7 +107,8 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
                 pm25Entity: storage.getPM25Entity(),
                 lightLevelEntity: storage.getLightLevelEntity(),
                 aqiEntity: storage.getAQIEntity(),
-                windDirectionEntity: storage.getWindDirectionEntity()
+                windDirectionEntity: storage.getWindDirectionEntity(),
+                pressureEntity: storage.getPressureEntity()
             )
 
             // Save to shared storage so app can see widget is working
@@ -121,6 +123,7 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
             storage.saveLightLevel(snapshot.lightLevel)
             storage.saveAQI(snapshot.aqi)
             storage.saveWindDirection(snapshot.windDirection)
+            storage.savePressure(snapshot.pressure)
 
             return snapshot
         } catch {

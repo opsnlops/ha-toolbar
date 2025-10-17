@@ -21,7 +21,7 @@ struct SettingsView: View {
         }
         .padding(20)
 #if os(macOS)
-        .frame(width: 600, height: 400)
+        .frame(width: 700, height: 650)
 #endif
     }
 }

@@ -36,6 +36,7 @@ class WebSocketClient : ObservableObject {
     @AppStorage("lightLevelEntity") private var lightLevelEntity: String = ""
     @AppStorage("aqiEntity") private var aqiEntity: String = ""
     @AppStorage("windDirectionEntity") private var windDirectionEntity: String = ""
+    @AppStorage("pressureEntity") private var pressureEntity: String = ""
 
     private var serverHostname: String?
     private var authToken: String?
@@ -471,6 +472,13 @@ class WebSocketClient : ObservableObject {
             }
         }
 
+        if !pressureEntity.isEmpty {
+            let response = await readSensorState(pressureEntity)
+            if case .success(let value) = response, let doubleValue = Double(value) {
+                DispatchQueue.main.async { self.sensorData.updatePressure(doubleValue) }
+            }
+        }
+
     }
 
 
@@ -588,6 +596,15 @@ class WebSocketClient : ObservableObject {
                     DispatchQueue.main.async {
                         self.sensorData.updateWindDirection(valueString)
                         self.logger.info("Wind direction updated: \(valueString)")
+                    }
+                }
+
+            case pressureEntity:
+                if let valueString = newState["state"] as? String,
+                   let value = Double(valueString) {
+                    DispatchQueue.main.async {
+                        self.sensorData.updatePressure(value)
+                        self.logger.info("Pressure updated: \(valueString)")
                     }
                 }
 

@@ -603,6 +603,17 @@ struct LargeWidgetView: View {
                             color: .yellow
                         )
                     }
+
+                    if snapshot.pressure > 0 {
+                        LargeSensorCard(
+                            icon: "gauge.with.dots.needle.bottom.50percent",
+                            label: "Pressure",
+                            value: String(format: "%.1f", snapshot.pressure),
+                            unit: "hPa",
+                            detail: nil,
+                            color: .cyan
+                        )
+                    }
                 }
                 .padding(.horizontal, 16)
             }
@@ -811,13 +822,14 @@ struct AccessoryInlineView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
+            pressure: 1013.5,
             lastUpdated: Date(),
             temperatureTrend: .up,
             windSpeedTrend: .down,
             humidityTrend: .stable,
             pm25Trend: .down,
             lightLevelTrend: .up,
-            aqiTrend: .stable
+            pressureTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )
@@ -840,13 +852,14 @@ struct AccessoryInlineView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
+            pressure: 1013.5,
             lastUpdated: Date(),
             temperatureTrend: .up,
             windSpeedTrend: .down,
             humidityTrend: .stable,
             pm25Trend: .down,
             lightLevelTrend: .up,
-            aqiTrend: .stable
+            pressureTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )
@@ -916,13 +929,14 @@ struct CarPlayWidgetView: View {
             lightLevel: 450.0,
             aqi: 42.0,
             windDirection: "NW",
+            pressure: 1013.5,
             lastUpdated: Date(),
             temperatureTrend: .up,
             windSpeedTrend: .down,
             humidityTrend: .stable,
             pm25Trend: .down,
             lightLevelTrend: .up,
-            aqiTrend: .stable
+            pressureTrend: .stable
         ),
         configuration: SensorConfigurationIntent()
     )

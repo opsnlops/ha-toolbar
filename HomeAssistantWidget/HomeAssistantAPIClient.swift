@@ -67,7 +67,8 @@ struct HomeAssistantAPIClient {
         pm25Entity: String?,
         lightLevelEntity: String?,
         aqiEntity: String?,
-        windDirectionEntity: String?
+        windDirectionEntity: String?,
+        pressureEntity: String?
     ) async throws -> SensorSnapshot {
         // Fetch core entities in parallel
         async let temperature = fetchEntityState(temperatureEntity)
@@ -131,6 +132,13 @@ struct HomeAssistantAPIClient {
             windDirStr = nil
         }
 
+        let pressureStr: String?
+        if let pressureEnt = pressureEntity, !pressureEnt.isEmpty {
+            pressureStr = try? await fetchEntityState(pressureEnt)
+        } else {
+            pressureStr = nil
+        }
+
         let (tempStr, windStr, rainStr) = try await (temperature, windSpeed, rainAmount)
 
         // Get trends from shared storage (calculated by main app)
@@ -148,13 +156,14 @@ struct HomeAssistantAPIClient {
             lightLevel: lightLevelStr != nil ? Double(lightLevelStr!) ?? 0.0 : 0.0,
             aqi: aqiStr != nil ? Double(aqiStr!) ?? 0.0 : 0.0,
             windDirection: windDirStr ?? "",
+            pressure: pressureStr != nil ? Double(pressureStr!) ?? 0.0 : 0.0,
             lastUpdated: Date(),
             temperatureTrend: storage.getTemperatureTrend(),
             windSpeedTrend: storage.getWindSpeedTrend(),
             humidityTrend: storage.getHumidityTrend(),
             pm25Trend: storage.getPM25Trend(),
             lightLevelTrend: storage.getLightLevelTrend(),
-            aqiTrend: storage.getAQITrend()
+            pressureTrend: storage.getPressureTrend()
         )
     }
 }

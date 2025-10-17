@@ -25,9 +25,9 @@ struct HomeAssistantToolbarApp: App {
             let settingsView = SettingsView()
             let hostingController = NSHostingController(rootView: settingsView)
             let window = NSWindow(contentViewController: hostingController)
-            window.setContentSize(NSSize(width: 400, height: 300))
+            window.setContentSize(NSSize(width: 700, height: 650))
             window.title = "Preferences"
-            window.styleMask = [.titled, .closable, .miniaturizable]
+            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             let controller = SettingsWindowController(window: window)
             return controller
         }()
@@ -66,6 +66,7 @@ struct HomeAssistantToolbarApp: App {
     @AppStorage("lightLevelEntity") private var lightLevelEntity: String = ""
     @AppStorage("aqiEntity") private var aqiEntity: String = ""
     @AppStorage("windDirectionEntity") private var windDirectionEntity: String = ""
+    @AppStorage("pressureEntity") private var pressureEntity: String = ""
 
     init()
     {
@@ -82,7 +83,8 @@ struct HomeAssistantToolbarApp: App {
             "pm25Entity": "sensor.outside_pm_2_5um",
             "lightLevelEntity": "sensor.outside_light_level",
             "aqiEntity": "sensor.airnow_aqi",
-            "windDirectionEntity": "sensor.wind_direction"
+            "windDirectionEntity": "sensor.wind_direction",
+            "pressureEntity": "sensor.office_pressure"
         ]
         UserDefaults.standard.register(defaults: defaultPreferences)
 
@@ -118,7 +120,8 @@ struct HomeAssistantToolbarApp: App {
                 pm25Entity: pm25Entity,
                 lightLevelEntity: lightLevelEntity,
                 aqiEntity: aqiEntity,
-                windDirectionEntity: windDirectionEntity
+                windDirectionEntity: windDirectionEntity,
+                pressureEntity: pressureEntity
             )
             self.connect()
         }
@@ -216,16 +219,24 @@ struct HomeAssistantToolbarApp: App {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Air Quality")
                         .font(.headline)
+                    Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
                     HStack(spacing: 4) {
-                        Text("🏭 AQI: \(sensors.aqi, specifier: "%.0f")")
-                        Image(systemName: sensors.aqiTrend.symbolName)
+                        Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
+                        Image(systemName: sensors.pm25Trend.symbolName)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .opacity(0.6)
                     }
+                }
+
+                Divider()
+
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Barometer")
+                        .font(.headline)
                     HStack(spacing: 4) {
-                        Text("🔬 PM2.5: \(sensors.pm25, specifier: "%.0f") µg/m³")
-                        Image(systemName: sensors.pm25Trend.symbolName)
+                        Text("🔘 \(sensors.pressure, specifier: "%.1f") hPa")
+                        Image(systemName: sensors.pressureTrend.symbolName)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .opacity(0.6)

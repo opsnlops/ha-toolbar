@@ -26,6 +26,7 @@ public class MonitoredSensors: ObservableObject {
     @Published public var lightLevel: Double = 0.0
     @Published public var aqi: Double = 0.0
     @Published public var windDirection: String = ""
+    @Published public var pressure: Double = 0.0
 
     // Trend tracking for sensors
     private var temperatureHistory = TrendHistory()
@@ -33,15 +34,16 @@ public class MonitoredSensors: ObservableObject {
     private var humidityHistory = TrendHistory()
     private var pm25History = TrendHistory()
     private var lightLevelHistory = TrendHistory()
-    private var aqiHistory = TrendHistory()
+    private var pressureHistory = TrendHistory()
 
-    // Thresholds for determining if a change is significant
-    private let temperatureThreshold: Double = 0.25  // ±0.25°F
-    private let windSpeedThreshold: Double = 0.5    // ±0.5 mph
-    private let humidityThreshold: Double = 2.0     // ±2%
-    private let pm25Threshold: Double = 5.0         // ±5 µg/m³
-    private let aqiThreshold: Double = 5.0          // ±5 AQI
-    private let lightLevelThreshold: Double = 100.0 // ±100 lux
+    // Thresholds for slope-based trend detection (change per minute)
+    // These detect gradual trends more effectively than point-to-point comparison
+    private let temperatureThreshold: Double = 0.01   // ±0.01°F/min (~0.3°F over 30 min)
+    private let windSpeedThreshold: Double = 0.02     // ±0.02 mph/min (~0.6 mph over 30 min)
+    private let humidityThreshold: Double = 0.05      // ±0.05%/min (~1.5% over 30 min)
+    private let pm25Threshold: Double = 0.1           // ±0.1 µg/m³/min (~3 µg/m³ over 30 min)
+    private let lightLevelThreshold: Double = 2.0     // ±2 lux/min (~60 lux over 30 min)
+    private let pressureThreshold: Double = 0.03      // ±0.03 hPa/min (~1 hPa over 30 min)
 
     // Computed properties for trends
     public var temperatureTrend: Trend {
@@ -64,8 +66,8 @@ public class MonitoredSensors: ObservableObject {
         lightLevelHistory.calculateTrend(threshold: lightLevelThreshold)
     }
 
-    public var aqiTrend: Trend {
-        aqiHistory.calculateTrend(threshold: aqiThreshold)
+    public var pressureTrend: Trend {
+        pressureHistory.calculateTrend(threshold: pressureThreshold)
     }
 
     @MainActor
@@ -173,9 +175,7 @@ public class MonitoredSensors: ObservableObject {
     func updateAQI(_ aqi: Double) {
         if aqi != self.aqi {
             self.aqi = aqi
-            aqiHistory.addDataPoint(value: aqi)
             sharedStorage.saveAQI(aqi)
-            sharedStorage.saveAQITrend(aqiTrend)
             reloadWidgets()
         }
     }
@@ -185,6 +185,17 @@ public class MonitoredSensors: ObservableObject {
         if windDirection != self.windDirection {
             self.windDirection = windDirection
             sharedStorage.saveWindDirection(windDirection)
+            reloadWidgets()
+        }
+    }
+
+    @MainActor
+    func updatePressure(_ pressure: Double) {
+        if pressure != self.pressure {
+            self.pressure = pressure
+            pressureHistory.addDataPoint(value: pressure)
+            sharedStorage.savePressure(pressure)
+            sharedStorage.savePressureTrend(pressureTrend)
             reloadWidgets()
         }
     }

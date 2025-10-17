@@ -10,7 +10,7 @@ struct DataPoint: Codable {
 /// Manages historical data points for trend calculation
 class TrendHistory: Codable {
     private var dataPoints: [DataPoint] = []
-    private let maxDataPoints = 20  // Keep ~20 points (enough for 15-min comparison with 1-min updates)
+    private let maxDataPoints = 300  // Keep 1 hour of data (240 points at 15-sec intervals, plus buffer)
 
     /// Adds a new data point
     func addDataPoint(value: Double) {
@@ -18,7 +18,7 @@ class TrendHistory: Codable {
         dataPoints.append(point)
 
         // Remove old data points (keep last hour of data)
-        let oneHourAgo = Date().addingTimeInterval(-3600)
+        let oneHourAgo = Date().addingTimeInterval(-3600)  // 1 hour = 3600 seconds
         dataPoints.removeAll { $0.timestamp < oneHourAgo }
 
         // Also enforce max count to prevent unbounded growth
@@ -27,26 +27,49 @@ class TrendHistory: Codable {
         }
     }
 
-    /// Calculate trend by comparing current value to value from 30 minutes ago
+    /// Calculate trend using linear regression across all data points
+    /// This detects gradual trends better than single point comparison
     func calculateTrend(threshold: Double) -> Trend {
-        guard !dataPoints.isEmpty else { return .stable }
+        guard dataPoints.count >= 2 else { return .stable }
 
-        let currentValue = dataPoints.last!.value
-        let thirtyMinutesAgo = Date().addingTimeInterval(-30 * 60)  // 30 minutes
+        // Use all available data points for trend calculation
+        let n = Double(dataPoints.count)
 
-        // Find the closest data point to 30 minutes ago
-        let historicalPoint = dataPoints
-            .filter { $0.timestamp <= thirtyMinutesAgo }
-            .last
+        // Convert timestamps to seconds from first point for x-axis
+        let firstTimestamp = dataPoints.first!.timestamp.timeIntervalSince1970
 
-        // If we don't have data from 30 minutes ago yet, return stable
-        guard let historical = historicalPoint else { return .stable }
+        var sumX: Double = 0
+        var sumY: Double = 0
+        var sumXY: Double = 0
+        var sumX2: Double = 0
 
-        let difference = currentValue - historical.value
+        for point in dataPoints {
+            let x = point.timestamp.timeIntervalSince1970 - firstTimestamp
+            let y = point.value
 
-        if abs(difference) < threshold {
+            sumX += x
+            sumY += y
+            sumXY += x * y
+            sumX2 += x * x
+        }
+
+        // Calculate slope using least squares linear regression
+        // slope = (n*Σxy - Σx*Σy) / (n*Σx² - (Σx)²)
+        let denominator = (n * sumX2) - (sumX * sumX)
+
+        // Avoid division by zero
+        guard denominator != 0 else { return .stable }
+
+        let slope = ((n * sumXY) - (sumX * sumY)) / denominator
+
+        // Convert slope to change per minute for easier interpretation
+        // slope is currently change per second
+        let slopePerMinute = slope * 60.0
+
+        // Compare slope against threshold
+        if abs(slopePerMinute) < threshold {
             return .stable
-        } else if difference > 0 {
+        } else if slopePerMinute > 0 {
             return .up
         } else {
             return .down
