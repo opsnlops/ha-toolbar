@@ -674,9 +674,12 @@ class WebSocketClient : ObservableObject {
 
         logger.debug("Starting ping timer")
 
-        DispatchQueue.main.async {
-            self.pingTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { _ in
-                Task {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.pingTimer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
+                guard let self = self else { return }
+                Task { [weak self] in
+                    guard let self = self else { return }
                     self.logger.debug("Ping timer fired")
                     await self.sendPing()
                 }
@@ -696,18 +699,6 @@ class WebSocketClient : ObservableObject {
             self.pingTimer?.invalidate()
             self.pingTimer = nil
         }
-    }
-
-    private func reconnect() {
-
-        // Stop the timer
-        stopPingTimer()
-
-        // Handle the socket
-        webSocketTask?.cancel(with: .goingAway, reason: nil)
-
-        // .. and reconnect
-        _ = connect()
     }
 
     private func setupNetworkMonitoring() {
