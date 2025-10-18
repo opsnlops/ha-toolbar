@@ -448,7 +448,7 @@ struct LargeWidgetView: View {
             HStack {
                 Image(systemName: "house.fill")
                     .font(.system(size: 13))
-                Text("Home Assistant")
+                Text("Local Weather")
                     .font(.system(size: 14, weight: .semibold))
                 Spacer()
             }
@@ -529,7 +529,7 @@ struct LargeWidgetView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
 
-                //Wind & Air Quality Row
+                // Wind & Air Quality Row
                 HStack(spacing: 8) {
                     LargeSensorCard(
                         icon: "wind",
@@ -562,7 +562,7 @@ struct LargeWidgetView: View {
                 }
                 .padding(.horizontal, 16)
 
-                // Rain & Environmental Row
+                // Rain & Air Quality Row
                 HStack(spacing: 8) {
                     LargeSensorCard(
                         icon: "drop.fill",
@@ -592,7 +592,11 @@ struct LargeWidgetView: View {
                             color: .teal
                         )
                     }
+                }
+                .padding(.horizontal, 16)
 
+                // Light & Pressure Row
+                HStack(spacing: 8) {
                     if snapshot.lightLevel > 0 {
                         LargeSensorCard(
                             icon: "sun.max.fill",
@@ -600,7 +604,8 @@ struct LargeWidgetView: View {
                             value: formatWithThousandsSeparator(snapshot.lightLevel),
                             unit: "lux",
                             detail: nil,
-                            color: .yellow
+                            color: .yellow,
+                            trend: snapshot.lightLevelTrend
                         )
                     }
 
@@ -611,9 +616,14 @@ struct LargeWidgetView: View {
                             value: String(format: "%.1f", snapshot.pressure),
                             unit: "hPa",
                             detail: nil,
-                            color: .cyan
+                            color: .cyan,
+                            trend: snapshot.pressureTrend
                         )
                     }
+
+                    // Add spacer to left-align when there are only 2 items
+                    Spacer()
+                        .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, 16)
             }
@@ -711,6 +721,17 @@ struct LargeSensorCard: View {
     let unit: String
     let detail: String?
     let color: Color
+    let trend: Trend?
+
+    init(icon: String, label: String, value: String, unit: String, detail: String? = nil, color: Color, trend: Trend? = nil) {
+        self.icon = icon
+        self.label = label
+        self.value = value
+        self.unit = unit
+        self.detail = detail
+        self.color = color
+        self.trend = trend
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
@@ -723,6 +744,13 @@ struct LargeSensorCard: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
+
+                if let trend = trend {
+                    Text(trend.unicodeArrow)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .opacity(0.6)
+                }
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 1) {
