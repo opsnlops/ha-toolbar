@@ -14,7 +14,7 @@ func formatLightLeveliOS(_ value: Double) -> String {
 
 struct EntitiesView: View {
 
-    @ObservedObject var client = WebSocketClient.shared
+    @ObservedObject var service = HomeAssistantService.shared
 
     @ObservedObject var sensors = MonitoredSensors.shared
 
@@ -141,9 +141,9 @@ struct EntitiesView: View {
                         .foregroundStyle(.secondary)
                     Text("💻 Events: \(sensors.totalEventsProcessed)")
                         .font(.caption)
-                    Text("🔌 Connected: \(client.isConnected ? "Yes" : "No")")
+                    Text("🔌 Connected: \(service.isConnected ? "Yes" : "No")")
                         .font(.caption)
-                    Text("📡 Pings: \(client.totalPings)")
+                    Text("📡 Pings: \(service.totalPings)")
                         .font(.caption)
                 }
 
@@ -151,12 +151,12 @@ struct EntitiesView: View {
             .padding()
         }
         .task {
-            await client.loadSensorData()
+            await service.loadSensorData()
         }
     }
 
     func connect() {
-        _ = client.connect()
+        _ = service.connect()
     }
 
 }

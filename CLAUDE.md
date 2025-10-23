@@ -26,28 +26,26 @@ open HomeAssistantToolbar.xcodeproj
 
 ### Core Components
 
-**WebSocketClient** (`WebSocketClient.swift`)
-- Singleton that manages WebSocket connection to Home Assistant
-- Handles authentication, message routing, and automatic reconnection
-- Implements platform-specific lifecycle management:
-  - **macOS**: Listens to `NSWorkspace` sleep/wake notifications
-  - **iOS**: Listens to `UIApplication` background/foreground notifications
-- Uses ping/pong mechanism to detect connection health (10-second interval)
-- On connection loss or timeout, automatically reconnects after a 5-second delay
-- All network operations are async/await based
+**HomeAssistantClient** (`NewNetworking/HomeAssistantClient.swift`)
+- Swift 6 `actor` that owns both REST and WebSocket access to Home Assistant
+- Authenticates, subscribes to `state_changed`, pings every 10 seconds, and publishes events via `AsyncStream<ClientEvent>`
+- Explicit connection-state machine (`connecting → authenticated → subscribed → disconnected`)
+
+**HomeAssistantService** (`Services/HomeAssistantService.swift`)
+- `@MainActor` bridge that instantiates the actor, forwards events into `MonitoredSensors`, and mirrors connection state/ping counts for the UI
+- Handles initial REST hydration, structured reconnects on network loss, and exposes an observable API for SwiftUI
 
 **MonitoredSensors** (`Model/MonitoredSensors.swift`)
 - Singleton `ObservableObject` that holds current sensor state
 - Published properties for temperature, wind speed, rain amount, and event count
 - All updates are `@MainActor` to ensure thread safety
-- Shared between WebSocketClient and UI layers
+- Shared between HomeAssistantService and UI layers
 - Persists data to shared storage and triggers widget timeline reloads
 
 **SharedSensorStorage** (`Model/SharedSensorStorage.swift`)
-- Manages App Group shared storage for sensor data
-- Enables data sharing between main app and widget extension
-- Uses `UserDefaults(suiteName: "group.io.opsnlops.HomeAssistantToolbar")`
-- Provides snapshot of all sensor data for widget timelines
+- Static namespace over App Group storage shared by app and widget
+- Uses `UserDefaults(suiteName: "group.io.opsnlops.HomeAssistantToolbar")` under the hood
+- Provides snapshot/ accessor helpers (`getSensorSnapshot()`) for widget timelines
 
 **HomeAssistantToolbarApp** (`HomeAssistantToolbarApp.swift`)
 - Main app entry point with platform-specific UI:
@@ -59,13 +57,13 @@ open HomeAssistantToolbar.xcodeproj
 ### Data Flow
 
 1. **Authentication**: Credentials stored in `SimpleKeychain` (service: `io.opsnlops.HomeAssistantToolbar`)
-2. **Connection**: WebSocketClient connects on app startup, authenticates, then subscribes to `state_changed` events
-3. **Initial State**: After auth, REST API (`/api/states/`) fetches current values for all configured sensors
+2. **Connection**: `HomeAssistantService` calls the actor’s `connect()`, which authenticates and subscribes to `state_changed`
+3. **Initial State**: After auth, the service issues REST fetches (`/api/states/…`) for each configured sensor
 4. **Live Updates**: WebSocket events update `MonitoredSensors` which triggers:
    - SwiftUI view updates via `@Published` properties
    - Shared storage writes via `SharedSensorStorage`
    - Widget timeline reloads via `WidgetCenter.shared.reloadAllTimelines()`
-5. **Reconnection**: Platform lifecycle events (sleep/wake, background/foreground) trigger automatic disconnect/reconnect
+5. **Reconnection**: The service monitors connection state and schedules reconnect attempts after network failures or lifecycle transitions
 
 ### Widget Architecture
 
@@ -99,14 +97,14 @@ Credentials are stored separately in keychain:
 The app uses `#if os(macOS)` / `#elseif os(iOS)` extensively for platform differences:
 - macOS uses `NSWorkspace` notifications and `MenuBarExtra`
 - iOS uses `UIApplication` notifications and standard SwiftUI views
-- WebSocketClient has separate notification handlers for each platform's lifecycle
+- `HomeAssistantService` centralises lifecycle handling; the actor itself is platform-agnostic
 
 ### Important Implementation Details
 
-- **Singleton Pattern**: Both `WebSocketClient` and `MonitoredSensors` use `.shared` singletons
-- **Pure Swift**: All notification observers use closure-based Swift APIs, not `@objc` selectors
-- **Memory Safety**: Observers use `[weak self]` and are cleaned up in `deinit`
-- **Thread Safety**: All UI updates go through `@MainActor` or `DispatchQueue.main.async`
+- **Singleton Pattern**: `HomeAssistantService` and `MonitoredSensors` expose shared instances for convenience
+- **Pure Swift**: Lifecycle observers and API clients are closure-based Swift; no `@objc` selectors required
+- **Memory Safety**: Observers/tasks capture `[weak self]` and are cancelled on teardown
+- **Thread Safety**: UI/state updates happen on the main actor; networking is actor-isolated
 - **Logging**: Uses `OSLog` with subsystem `io.opsnlops.HomeAssistantToolbar`
 - **App Groups**: Required for widget data sharing - `group.io.opsnlops.HomeAssistantToolbar` must be configured in both main app and widget extension entitlements
 

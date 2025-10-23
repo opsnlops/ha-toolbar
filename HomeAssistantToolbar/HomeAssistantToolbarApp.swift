@@ -44,8 +44,7 @@ struct HomeAssistantToolbarApp: App {
 
     let simpleKeychain = SimpleKeychain(service: "io.opsnlops.HomeAssistantToolbar", synchronizable: true)
 
-    let client = WebSocketClient.shared
-    let sharedStorage = SharedSensorStorage.shared
+    @ObservedObject var service = HomeAssistantService.shared
 
     @ObservedObject var sensors = MonitoredSensors.shared
     @State private var isSettingsWindowOpen = false
@@ -101,11 +100,11 @@ struct HomeAssistantToolbarApp: App {
             logger.debug("setting external hostname to \(extHostname)")
         }
 
-        client.configure(hostname: serverHostname, authToken: authToken)
+        service.configure(hostname: serverHostname, authToken: authToken)
 
         // Save configuration to shared storage for widget access
         if !serverHostname.isEmpty && !authToken.isEmpty {
-            sharedStorage.saveConfiguration(
+            SharedSensorStorage.saveConfiguration(
                 hostname: serverHostname,
                 port: serverPort,
                 useTLS: serverUseTLS,
@@ -129,7 +128,7 @@ struct HomeAssistantToolbarApp: App {
 
     func connect() {
 
-        let connectResult = client.connect()
+        let connectResult = service.connect()
         switch (connectResult) {
             case .success:
                 logger.debug("Connected to \(serverHostname)")
@@ -261,13 +260,13 @@ struct HomeAssistantToolbarApp: App {
 
                         HStack(spacing: 4) {
                             Text("🔌")
-                            Text(client.isConnected ? "Connected" : "Disconnected")
+                            Text(service.isConnected ? "Connected" : "Disconnected")
                         }
                         .font(.caption)
 
                         HStack(spacing: 4) {
                             Text("📡")
-                            Text("Pings: \(client.totalPings)")
+                            Text("Pings: \(service.totalPings)")
                         }
                         .font(.caption)
                     }

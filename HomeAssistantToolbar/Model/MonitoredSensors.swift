@@ -5,14 +5,13 @@ import SwiftUI
 import WidgetKit
 
 
+@MainActor
 public class MonitoredSensors: ObservableObject {
 
     let logger = Logger(subsystem: "io.opsnlops.HomeAssistantToolbar", category: "MonitoredSensors")
 
     // We only want one of these
     static let shared = MonitoredSensors()
-
-    private let sharedStorage = SharedSensorStorage.shared
 
     @Published public var totalEventsProcessed: UInt64 = 0
     @Published public var outsideTemperature: Double = 0.0
@@ -73,7 +72,7 @@ public class MonitoredSensors: ObservableObject {
     @MainActor
     public func incrementTotalEventsProcessed() {
         self.totalEventsProcessed += 1
-        sharedStorage.saveTotalEventsProcessed(self.totalEventsProcessed)
+        SharedSensorStorage.saveTotalEventsProcessed(self.totalEventsProcessed)
     }
 
 
@@ -84,8 +83,8 @@ public class MonitoredSensors: ObservableObject {
         if temperature != self.outsideTemperature {
             self.outsideTemperature = temperature
             temperatureHistory.addDataPoint(value: temperature)
-            sharedStorage.saveOutsideTemperature(temperature)
-            sharedStorage.saveTemperatureTrend(temperatureTrend)
+            SharedSensorStorage.saveOutsideTemperature(temperature)
+            SharedSensorStorage.saveTemperatureTrend(temperatureTrend)
             reloadWidgets()
         }
     }
@@ -95,8 +94,8 @@ public class MonitoredSensors: ObservableObject {
         if windSpeed != self.windSpeed {
             self.windSpeed = windSpeed
             windSpeedHistory.addDataPoint(value: windSpeed)
-            sharedStorage.saveWindSpeed(windSpeed)
-            sharedStorage.saveWindSpeedTrend(windSpeedTrend)
+            SharedSensorStorage.saveWindSpeed(windSpeed)
+            SharedSensorStorage.saveWindSpeedTrend(windSpeedTrend)
             reloadWidgets()
         }
 
@@ -106,7 +105,7 @@ public class MonitoredSensors: ObservableObject {
     func updateRainAmount(_ rainAmount: Double) {
         if rainAmount != self.rainAmount {
             self.rainAmount = rainAmount
-            sharedStorage.saveRainAmount(rainAmount)
+            SharedSensorStorage.saveRainAmount(rainAmount)
             reloadWidgets()
         }
     }
@@ -115,7 +114,7 @@ public class MonitoredSensors: ObservableObject {
     func updateTemperatureMax(_ temperatureMax: Double) {
         if temperatureMax != self.temperatureMax {
             self.temperatureMax = temperatureMax
-            sharedStorage.saveTemperatureMax(temperatureMax)
+            SharedSensorStorage.saveTemperatureMax(temperatureMax)
             reloadWidgets()
         }
     }
@@ -124,7 +123,7 @@ public class MonitoredSensors: ObservableObject {
     func updateTemperatureMin(_ temperatureMin: Double) {
         if temperatureMin != self.temperatureMin {
             self.temperatureMin = temperatureMin
-            sharedStorage.saveTemperatureMin(temperatureMin)
+            SharedSensorStorage.saveTemperatureMin(temperatureMin)
             reloadWidgets()
         }
     }
@@ -134,8 +133,8 @@ public class MonitoredSensors: ObservableObject {
         if humidity != self.humidity {
             self.humidity = humidity
             humidityHistory.addDataPoint(value: humidity)
-            sharedStorage.saveHumidity(humidity)
-            sharedStorage.saveHumidityTrend(humidityTrend)
+            SharedSensorStorage.saveHumidity(humidity)
+            SharedSensorStorage.saveHumidityTrend(humidityTrend)
             reloadWidgets()
         }
     }
@@ -144,7 +143,7 @@ public class MonitoredSensors: ObservableObject {
     func updateWindSpeedMax(_ windSpeedMax: Double) {
         if windSpeedMax != self.windSpeedMax {
             self.windSpeedMax = windSpeedMax
-            sharedStorage.saveWindSpeedMax(windSpeedMax)
+            SharedSensorStorage.saveWindSpeedMax(windSpeedMax)
             reloadWidgets()
         }
     }
@@ -154,8 +153,8 @@ public class MonitoredSensors: ObservableObject {
         if pm25 != self.pm25 {
             self.pm25 = pm25
             pm25History.addDataPoint(value: pm25)
-            sharedStorage.savePM25(pm25)
-            sharedStorage.savePM25Trend(pm25Trend)
+            SharedSensorStorage.savePM25(pm25)
+            SharedSensorStorage.savePM25Trend(pm25Trend)
             reloadWidgets()
         }
     }
@@ -165,8 +164,8 @@ public class MonitoredSensors: ObservableObject {
         if lightLevel != self.lightLevel {
             self.lightLevel = lightLevel
             lightLevelHistory.addDataPoint(value: lightLevel)
-            sharedStorage.saveLightLevel(lightLevel)
-            sharedStorage.saveLightLevelTrend(lightLevelTrend)
+            SharedSensorStorage.saveLightLevel(lightLevel)
+            SharedSensorStorage.saveLightLevelTrend(lightLevelTrend)
             reloadWidgets()
         }
     }
@@ -175,7 +174,7 @@ public class MonitoredSensors: ObservableObject {
     func updateAQI(_ aqi: Double) {
         if aqi != self.aqi {
             self.aqi = aqi
-            sharedStorage.saveAQI(aqi)
+            SharedSensorStorage.saveAQI(aqi)
             reloadWidgets()
         }
     }
@@ -184,7 +183,7 @@ public class MonitoredSensors: ObservableObject {
     func updateWindDirection(_ windDirection: String) {
         if windDirection != self.windDirection {
             self.windDirection = windDirection
-            sharedStorage.saveWindDirection(windDirection)
+            SharedSensorStorage.saveWindDirection(windDirection)
             reloadWidgets()
         }
     }
@@ -194,8 +193,8 @@ public class MonitoredSensors: ObservableObject {
         if pressure != self.pressure {
             self.pressure = pressure
             pressureHistory.addDataPoint(value: pressure)
-            sharedStorage.savePressure(pressure)
-            sharedStorage.savePressureTrend(pressureTrend)
+            SharedSensorStorage.savePressure(pressure)
+            SharedSensorStorage.savePressureTrend(pressureTrend)
             reloadWidgets()
         }
     }

@@ -1,0 +1,4 @@
+# Xcode build artifacts
+DerivedData/
+SourcePackages/
+*.xcuserdatad/

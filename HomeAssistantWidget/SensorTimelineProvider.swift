@@ -12,8 +12,6 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
     typealias Entry = SensorTimelineEntry
     typealias Intent = SensorConfigurationIntent
 
-    private let storage = SharedSensorStorage.shared
-
     func placeholder(in context: Context) -> SensorTimelineEntry {
         SensorTimelineEntry(
             date: Date(),
@@ -49,7 +47,7 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
         }
 
         // Try to fetch live data
-        let snapshot = await fetchLiveData() ?? storage.getSensorSnapshot()
+        let snapshot = await fetchLiveData() ?? SharedSensorStorage.getSensorSnapshot()
         return SensorTimelineEntry(
             date: Date(),
             snapshot: snapshot,
@@ -61,7 +59,7 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
         let currentDate = Date()
 
         // Fetch live data from Home Assistant
-        let snapshot = await fetchLiveData() ?? storage.getSensorSnapshot()
+        let snapshot = await fetchLiveData() ?? SharedSensorStorage.getSensorSnapshot()
 
         let entry = SensorTimelineEntry(
             date: currentDate,
@@ -78,19 +76,19 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
     /// Fetch live data directly from Home Assistant API
     private func fetchLiveData() async -> SensorSnapshot? {
         // Check if we have configuration and fetch all entity IDs from storage
-        guard storage.hasConfiguration(),
-              let hostname = storage.getServerHostname(),
-              let authToken = storage.getAuthToken(),
-              let tempEntity = storage.getTemperatureEntity(),
-              let windEntity = storage.getWindSpeedEntity(),
-              let rainEntity = storage.getRainAmountEntity() else {
+        guard SharedSensorStorage.hasConfiguration(),
+              let hostname = SharedSensorStorage.getServerHostname(),
+              let authToken = SharedSensorStorage.getAuthToken(),
+              let tempEntity = SharedSensorStorage.getTemperatureEntity(),
+              let windEntity = SharedSensorStorage.getWindSpeedEntity(),
+              let rainEntity = SharedSensorStorage.getRainAmountEntity() else {
             return nil
         }
 
         let client = HomeAssistantAPIClient(
             hostname: hostname,
-            port: storage.getServerPort(),
-            useTLS: storage.getServerUseTLS(),
+            port: SharedSensorStorage.getServerPort(),
+            useTLS: SharedSensorStorage.getServerUseTLS(),
             authToken: authToken
         )
 
@@ -100,30 +98,30 @@ struct SensorTimelineProvider: AppIntentTimelineProvider {
                 temperatureEntity: tempEntity,
                 windSpeedEntity: windEntity,
                 rainAmountEntity: rainEntity,
-                temperatureMaxEntity: storage.getTemperatureMaxEntity(),
-                temperatureMinEntity: storage.getTemperatureMinEntity(),
-                humidityEntity: storage.getHumidityEntity(),
-                windSpeedMaxEntity: storage.getWindSpeedMaxEntity(),
-                pm25Entity: storage.getPM25Entity(),
-                lightLevelEntity: storage.getLightLevelEntity(),
-                aqiEntity: storage.getAQIEntity(),
-                windDirectionEntity: storage.getWindDirectionEntity(),
-                pressureEntity: storage.getPressureEntity()
+                temperatureMaxEntity: SharedSensorStorage.getTemperatureMaxEntity(),
+                temperatureMinEntity: SharedSensorStorage.getTemperatureMinEntity(),
+                humidityEntity: SharedSensorStorage.getHumidityEntity(),
+                windSpeedMaxEntity: SharedSensorStorage.getWindSpeedMaxEntity(),
+                pm25Entity: SharedSensorStorage.getPM25Entity(),
+                lightLevelEntity: SharedSensorStorage.getLightLevelEntity(),
+                aqiEntity: SharedSensorStorage.getAQIEntity(),
+                windDirectionEntity: SharedSensorStorage.getWindDirectionEntity(),
+                pressureEntity: SharedSensorStorage.getPressureEntity()
             )
 
             // Save to shared storage so app can see widget is working
-            storage.saveOutsideTemperature(snapshot.outsideTemperature)
-            storage.saveWindSpeed(snapshot.windSpeed)
-            storage.saveRainAmount(snapshot.rainAmount)
-            storage.saveTemperatureMax(snapshot.temperatureMax)
-            storage.saveTemperatureMin(snapshot.temperatureMin)
-            storage.saveHumidity(snapshot.humidity)
-            storage.saveWindSpeedMax(snapshot.windSpeedMax)
-            storage.savePM25(snapshot.pm25)
-            storage.saveLightLevel(snapshot.lightLevel)
-            storage.saveAQI(snapshot.aqi)
-            storage.saveWindDirection(snapshot.windDirection)
-            storage.savePressure(snapshot.pressure)
+            SharedSensorStorage.saveOutsideTemperature(snapshot.outsideTemperature)
+            SharedSensorStorage.saveWindSpeed(snapshot.windSpeed)
+            SharedSensorStorage.saveRainAmount(snapshot.rainAmount)
+            SharedSensorStorage.saveTemperatureMax(snapshot.temperatureMax)
+            SharedSensorStorage.saveTemperatureMin(snapshot.temperatureMin)
+            SharedSensorStorage.saveHumidity(snapshot.humidity)
+            SharedSensorStorage.saveWindSpeedMax(snapshot.windSpeedMax)
+            SharedSensorStorage.savePM25(snapshot.pm25)
+            SharedSensorStorage.saveLightLevel(snapshot.lightLevel)
+            SharedSensorStorage.saveAQI(snapshot.aqi)
+            SharedSensorStorage.saveWindDirection(snapshot.windDirection)
+            SharedSensorStorage.savePressure(snapshot.pressure)
 
             return snapshot
         } catch {

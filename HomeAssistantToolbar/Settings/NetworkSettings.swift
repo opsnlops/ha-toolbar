@@ -9,6 +9,7 @@ struct NetworkSettings: View {
     @State private var externalHostname: String = ""
 
     let simpleKeychain = SimpleKeychain(service: "io.opsnlops.HomeAssistantToolbar", synchronizable: true)
+    private let service = HomeAssistantService.shared
 
 
     init() {
@@ -40,15 +41,19 @@ struct NetworkSettings: View {
                         #endif
                         .onChange(of: externalHostname) {
                             saveExternalHostname()
+                            updateServiceConfiguration()
                         }
                     TextField("Port", value: $serverPort, format: .number)
+                        .onChange(of: serverPort) { _ in updateServiceConfiguration() }
                     Toggle("Use TLS", isOn: $serverUseTLS)
+                        .onChange(of: serverUseTLS) { _ in updateServiceConfiguration() }
                 }
 
                 Section(header: Text("Authentication")) {
                     SecureField("Auth Token", text: $authToken)
                         .onChange(of: authToken) {
                             saveAuthToken()
+                            updateServiceConfiguration()
                         }
                 }
             }
@@ -73,9 +78,30 @@ struct NetworkSettings: View {
             print("Failed to save external hostname to keychain:", error)
         }
     }
+
+    private func updateServiceConfiguration() {
+        service.configure(hostname: externalHostname, authToken: authToken)
+        SharedSensorStorage.saveConfiguration(
+            hostname: externalHostname,
+            port: serverPort,
+            useTLS: serverUseTLS,
+            authToken: authToken,
+            temperatureEntity: UserDefaults.standard.string(forKey: "outsideTemperatureEntity") ?? "",
+            windSpeedEntity: UserDefaults.standard.string(forKey: "windSpeedEntity") ?? "",
+            rainAmountEntity: UserDefaults.standard.string(forKey: "rainAmountEntity") ?? "",
+            temperatureMaxEntity: UserDefaults.standard.string(forKey: "temperatureMaxEntity") ?? "",
+            temperatureMinEntity: UserDefaults.standard.string(forKey: "temperatureMinEntity") ?? "",
+            humidityEntity: UserDefaults.standard.string(forKey: "humidityEntity") ?? "",
+            windSpeedMaxEntity: UserDefaults.standard.string(forKey: "windSpeedMaxEntity") ?? "",
+            pm25Entity: UserDefaults.standard.string(forKey: "pm25Entity") ?? "",
+            lightLevelEntity: UserDefaults.standard.string(forKey: "lightLevelEntity") ?? "",
+            aqiEntity: UserDefaults.standard.string(forKey: "aqiEntity") ?? "",
+            windDirectionEntity: UserDefaults.standard.string(forKey: "windDirectionEntity") ?? "",
+            pressureEntity: UserDefaults.standard.string(forKey: "pressureEntity") ?? ""
+        )
+    }
 }
 
 #Preview {
     NetworkSettings()
 }
-
